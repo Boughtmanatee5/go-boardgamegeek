@@ -16,7 +16,7 @@ The gaps are mostly in the transport layer (`client.go`), plus errors, the packa
 | Errors | Typed errors (`*ErrorResponse`, `*RateLimitError`, `*AcceptedError`) that work with `errors.As` | `fmt.Errorf` strings, so callers can't tell "not found" from a 429 or a 500 | Large |
 | Query encoding | Struct tags encoded by `go-querystring` (go-github) or a `form` encoder (stripe-go) | A hand-written `toQueryString` per request, mostly `fmt.Sprintf`. `SearchRequest` only escapes spaces, so `&` in a query breaks it | Medium (bug) |
 | API surface | Grouped services: `client.Repositories.Get`, `sc.V1Customers.Retrieve` | All methods sit directly on `Client` | None (decided to keep flat methods) |
-| Return values | `(*T, *Response, error)`, where `*Response` exposes the status, headers and rate info | `(*T, error)` | Medium |
+| Return values | `(*T, *Response, error)`, where `*Response` exposes the status, headers and rate info | `(*T, error)` | None (decided to keep `(*T, error)`) |
 | Pagination | Shared `ListOptions` and `NextPage` (go-github), iterators (stripe-go) | `Page`/`PageSize` repeated per request, no helper | Medium |
 | Rate limiting / retries | `MaxNetworkRetries` with backoff, rate-limit detection | None. The tests throttle with `time.Sleep` (~4 minute suite) | Medium |
 | Testing | Unit tests against `httptest.Server` with fixtures, plus optional live tests | Live integration tests only | Large |
@@ -58,7 +58,9 @@ Phases 1, 3 and 4 kept the public API; Phase 2 changed `NewClient`. The remainin
 ### Phase 5: API naming (breaking)
 - Decision (2026-10-29): keep the endpoint methods directly on `Client` instead of go-github-style services.
   BGG's API has only about 10 endpoints, so grouping them adds indirection without much benefit.
-- Rename the request types from `XxxRequest` to `XxxOptions`, and return `(*T, *Response, error)`.
+- Decision (2026-10-29): keep returning `(*T, error)` instead of go-github's `(*T, *Response, error)`.
+  BGG returns paging in the xml body and sends no rate-limit headers, and the typed errors already carry the `*http.Response`.
+- Rename the request types from `XxxRequest` to `XxxOptions`.
 - Rename `Id` to `ID` and the constants to `ThingTypeBoardGame` style, and use short receivers.
 - Fix the module path/package name mismatch (rename the module, or move the code into a subdirectory).
 
