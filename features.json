@@ -1,0 +1,38 @@
+{
+    "search": {
+        "status": "done",
+        "evidence": "I wrote it all integration tests passed"
+    },
+    "thing": {
+        "status": "done",
+        "evidence": "I wrote it all integration tests passed"
+    },
+    "family_items": {
+        "status": "done",
+        "evidence": "2026-10-29T14:26:42Z go test ./integration_test/... -count=1: 31/31 passed (7 family tests); golangci-lint run: 0 issues"
+    },
+    "forum_list": {
+        "status": "incomplete",
+        "evidence": null
+    },
+    "threads": {
+        "status": "incomplete",
+        "evidence": null
+    },
+    "users": {
+        "status": "incomplete",
+        "evidence": null
+    },
+    "guilds": {
+        "status": "incomplete",
+        "evidence": null
+    },
+    "collection": {
+        "status": "incomplete",
+        "evidence": null
+    },
+    "hot": {
+        "status": "incomplete",
+        "evidence": null
+    }
+}
