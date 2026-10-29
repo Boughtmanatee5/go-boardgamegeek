@@ -39,8 +39,8 @@ Phases 1–4 are internal or additive. The breaking changes are grouped into Pha
 - Fix the `boadgamegeekURL` and `recieved` typos.
 
 ### Phase 2: Client construction
-- `NewClient(httpClient *http.Client) *Client` (nil uses a default), with an exported `BaseURL *url.URL`
-  and `UserAgent`, plus `WithAuthToken(token string) *Client`.
+- Functional options: `NewClient(options ...ClientOption) *Client` with `WithAuthToken`, `WithHTTPClient`,
+  `WithBaseURL` and `WithUserAgent`. This is a project preference over go-github's `NewClient(httpClient).WithAuthToken(token)`.
 - Optionally drop the `oauth2` dependency, since BGG's token is a static bearer token.
 - Integration tests inject a rate-limited `RoundTripper` instead of sleeping in `newTestClient()`.
 

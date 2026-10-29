@@ -9,11 +9,12 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"golang.org/x/oauth2"
 )
 
-const boardgamegeekURL = "https://boardgamegeek.com/xmlapi2"
+const (
+	defaultBaseURL   = "https://boardgamegeek.com/xmlapi2/"
+	defaultUserAgent = "BoardGameGeekClient-go"
+)
 
 // apiError is returned with HTTP 200 in place of the expected document when an entity
 // does not exist, e.g. <error message='Thread Not Found' /> from /thread and /guild
@@ -34,29 +35,65 @@ var errAccepted = errors.New("request accepted by boardgamegeek but not yet proc
 var errNotXML = errors.New("boardgamegeek returned a non-xml response")
 
 type Client struct {
-	httpClient http.Client
-	token      *oauth2.Token
+	httpClient *http.Client
+	token      string
+	baseURL    *url.URL
+	userAgent  string
 }
 
-func NewClient(token *oauth2.Token) *Client {
-	httpClient := http.Client{}
+// ClientOption configures a Client in NewClient
+type ClientOption func(*Client)
 
-	return &Client{
-		httpClient: httpClient,
-		token:      token,
+// WithAuthToken sends token as a bearer token with every request
+func WithAuthToken(token string) ClientOption {
+	return func(c *Client) {
+		c.token = token
 	}
+}
+
+// WithHTTPClient sends requests with httpClient instead of a new http.Client,
+// e.g. to set timeouts or a rate-limiting transport
+func WithHTTPClient(httpClient *http.Client) ClientOption {
+	return func(c *Client) {
+		c.httpClient = httpClient
+	}
+}
+
+// WithBaseURL replaces the xmlapi2 root that endpoint paths are joined to, e.g. to point at a test server
+func WithBaseURL(baseURL *url.URL) ClientOption {
+	return func(c *Client) {
+		c.baseURL = baseURL
+	}
+}
+
+// WithUserAgent replaces the User-Agent header sent with every request
+func WithUserAgent(userAgent string) ClientOption {
+	return func(c *Client) {
+		c.userAgent = userAgent
+	}
+}
+
+// NewClient returns a Client for the BGG xmlapi2, configured by options
+func NewClient(options ...ClientOption) *Client {
+	baseURL, _ := url.Parse(defaultBaseURL)
+
+	c := &Client{
+		httpClient: &http.Client{},
+		baseURL:    baseURL,
+		userAgent:  defaultUserAgent,
+	}
+	for _, option := range options {
+		option(c)
+	}
+
+	return c
 }
 
 // get requests path with the given query and unmarshals the xml body into v.
 // BGG's "not found" responses come back as errNotXML, *apiError or *collectionErrors,
 // and HTTP 202 as errAccepted, so each endpoint can report them in its own terms.
 func (bggClient *Client) get(ctx context.Context, path string, query string, v any) error {
-	reqURL, urlParseErr := url.Parse(boardgamegeekURL)
-	if urlParseErr != nil {
-		return fmt.Errorf("error parsing boardgamegeek url %w", urlParseErr)
-	}
-
-	reqURL = reqURL.JoinPath(path)
+	reqURL := bggClient.baseURL.JoinPath(path)
 	reqURL.RawQuery = query
 
 	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
@@ -64,8 +101,11 @@ func (bggClient *Client) get(ctx context.Context, path string, query string, v a
 		return fmt.Errorf("error creating %s request %w", path, reqErr)
 	}
 
-	if bggClient.token != nil {
-		bggClient.token.SetAuthHeader(req)
+	if bggClient.userAgent != "" {
+		req.Header.Set("User-Agent", bggClient.userAgent)
+	}
+	if bggClient.token != "" {
+		req.Header.Set("Authorization", "Bearer "+bggClient.token)
 	}
 
 	resp, bggErr := bggClient.httpClient.Do(req)

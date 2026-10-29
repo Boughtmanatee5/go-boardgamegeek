@@ -2,12 +2,14 @@ package integration_test
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
-	"golang.org/x/oauth2"
 )
 
 const tokenEnvVar = "BGG_API_TOKEN"
@@ -24,16 +26,41 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// testThrottle spaces out tests so the suite stays under BGG's rate limit,
+// requestInterval spaces out requests so the suite stays under BGG's rate limit,
 // which returns 429 Too Many Requests after roughly 40 requests in a burst and refills slowly.
-const testThrottle = 2 * time.Second
+const requestInterval = 2 * time.Second
+
+// collectionInterval spaces out collection requests: /collection has a tighter rate limit
+// than the other endpoints and returns 429 after about 6 requests 2s apart.
+const collectionInterval = 5 * time.Second
+
+// throttledTransport waits until at least requestInterval (collectionInterval for /collection)
+// has passed since the previous request before sending the next one
+type throttledTransport struct {
+	mu   sync.Mutex
+	last time.Time
+}
+
+func (t *throttledTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	interval := requestInterval
+	if strings.HasSuffix(req.URL.Path, "/collection") {
+		interval = collectionInterval
+	}
+
+	t.mu.Lock()
+	time.Sleep(time.Until(t.last.Add(interval)))
+	t.last = time.Now()
+	t.mu.Unlock()
+
+	return http.DefaultTransport.RoundTrip(req)
+}
+
+// testHTTPClient is shared by every test client so the throttle applies across the whole suite
+var testHTTPClient = &http.Client{Transport: &throttledTransport{}}
 
 func newTestClient() *boardgamegeek.Client {
-	time.Sleep(testThrottle)
-
-	token := &oauth2.Token{
-		TokenType:   "Bearer",
-		AccessToken: bggToken,
-	}
-	return boardgamegeek.NewClient(token)
+	return boardgamegeek.NewClient(
+		boardgamegeek.WithHTTPClient(testHTTPClient),
+		boardgamegeek.WithAuthToken(bggToken),
+	)
 }

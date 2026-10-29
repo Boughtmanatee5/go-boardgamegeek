@@ -3,7 +3,6 @@ package integration_test
 import (
 	"errors"
 	"testing"
-	"time"
 
 	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
 	"github.com/stretchr/testify/assert"
@@ -15,17 +14,13 @@ const seventhContinentId int64 = 180263
 
 const collectionRetries = 10
 
-// collectionDelay spaces out every collection request: /collection has a tighter rate limit
-// than the other endpoints and returns 429 after about 6 requests 2s apart.
-const collectionDelay = 5 * time.Second
-
 // getCollection retries while BGG queues the request, as callers of GetCollection are expected to.
+// The test client's transport spaces out the retries.
 func getCollection(t *testing.T, request *boardgamegeek.CollectionRequest) (*boardgamegeek.CollectionResponse, error) {
 	t.Helper()
 	client := newTestClient()
 
 	for range collectionRetries {
-		time.Sleep(collectionDelay)
 		response, err := client.GetCollection(t.Context(), request)
 		if !errors.Is(err, boardgamegeek.ErrCollectionNotReady) {
 			return response, err

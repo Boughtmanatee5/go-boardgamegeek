@@ -14,6 +14,9 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 1. https://boardgamegeek.com/wiki/page/BGG_XML_API2 is the source of truth for boardgamegeek xmlapi2 don't invent fields; check them against a real response.
 2. client.go contains the main struct Client.
     - Client contains all the methods that make requests to boardgamegeek
+    - Build clients with functional options: `NewClient(opts ...ClientOption)`, e.g. `NewClient(WithAuthToken(token))`.
+      Options are `WithAuthToken` (sends `Authorization: Bearer <token>`), `WithHTTPClient`, `WithBaseURL` and `WithUserAgent`; Client fields stay unexported.
+      New client settings get a `WithXxx` option rather than an exported field
     - Every endpoint method goes through the unexported `Client.get(ctx, path, query, v)`, which builds and sends the request, checks the status and unmarshals the xml.
       `get` turns BGG's quirky responses into unexported errors: `errAccepted` (202), `errNotXML`, `*apiError` and `*collectionErrors`.
       Endpoint methods map these to their own messages with `errors.Is`/`errors.As`
@@ -31,7 +34,7 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 4. Integration tests for each boardgamegeek api endpoint are written in integration_test
     - `integration_test/main_test.go` reads the BGG bearer token from the `BGG_API_TOKEN` env var in `TestMain` and fails fast if it is unset; build clients with `newTestClient()`
     - Run with `BGG_API_TOKEN=<token> go test ./integration_test/...`
-    - `newTestClient()` sleeps 2s to keep the suite under BGG's rate limit (429 after ~40 requests in a burst); collection tests wait a further 5s per request because `/collection` is limited more tightly
+    - `newTestClient()` shares one `http.Client` whose `throttledTransport` spaces every request 2s apart (5s for `/collection`, which is limited more tightly) to stay under BGG's rate limit (429 after ~40 requests in a burst)
 
 ## Adding a new boardgamegeek XMLAPI2 endpoint
 1. Create a file for the new endpoint

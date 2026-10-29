@@ -4,8 +4,8 @@
         "evidence": "2026-10-29T17:41:00Z go test ./integration_test/... -count=1: 73/73 passed (206.6s); golangci-lint run: 0 issues"
     },
     "phase_2_client_construction": {
-        "status": "todo",
-        "evidence": ""
+        "status": "done",
+        "evidence": "2026-10-29T19:00:40Z go test ./integration_test/... -count=1: 73/73 passed; golangci-lint run: 0 issues"
     },
     "phase_3_typed_errors": {
         "status": "todo",
