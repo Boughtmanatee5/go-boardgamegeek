@@ -166,6 +166,6 @@ func TestGetForumUnknownIdReturnsError(t *testing.T) {
 	}
 
 	response, err := client.GetForum(ctx, request)
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
 	assert.Nil(t, response)
 }

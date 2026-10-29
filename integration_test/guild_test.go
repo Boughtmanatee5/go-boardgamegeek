@@ -106,5 +106,6 @@ func TestGetGuildUnknownIdReturnsError(t *testing.T) {
 
 	response, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: unknownId})
 	assert.ErrorContains(t, err, "Not Found")
+	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
 	assert.Nil(t, response)
 }

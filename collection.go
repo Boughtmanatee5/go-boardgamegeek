@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// ErrCollectionNotReady is returned when BGG has queued the collection request (HTTP 202).
-// Retry the same request after a few seconds.
+// ErrCollectionNotReady matches, with errors.Is, the *AcceptedError returned when BGG has queued
+// the collection request (HTTP 202). Retry the same request after a few seconds.
 var ErrCollectionNotReady = errors.New("collection request queued by boardgamegeek, retry later")
 
 // Bool returns a pointer to b, for the optional filters on CollectionRequest.
@@ -232,8 +232,4 @@ type CollectionResponse struct {
 type collectionErrors struct {
 	XMLName  xml.Name `xml:"errors"`
 	Messages []string `xml:"error>message"`
-}
-
-func (e *collectionErrors) Error() string {
-	return strings.Join(e.Messages, "; ")
 }

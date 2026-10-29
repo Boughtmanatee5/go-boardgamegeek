@@ -114,7 +114,7 @@ func TestGetThreadUnknownIdReturnsError(t *testing.T) {
 	client := newTestClient()
 
 	response, err := client.GetThread(ctx, &boardgamegeek.ThreadRequest{ID: unknownId})
-	assert.Error(t, err)
 	assert.ErrorContains(t, err, "Thread Not Found")
+	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
 	assert.Nil(t, response)
 }

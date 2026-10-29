@@ -148,5 +148,6 @@ func TestGetCollectionUnknownUsernameReturnsError(t *testing.T) {
 		Username: "zzznosuchuser123xyz",
 	})
 	assert.ErrorContains(t, err, "Invalid username specified")
+	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
 	assert.Nil(t, response)
 }

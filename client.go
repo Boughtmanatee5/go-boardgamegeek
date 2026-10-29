@@ -16,24 +16,6 @@ const (
 	defaultUserAgent = "BoardGameGeekClient-go"
 )
 
-// apiError is returned with HTTP 200 in place of the expected document when an entity
-// does not exist, e.g. <error message='Thread Not Found' /> from /thread and /guild
-type apiError struct {
-	XMLName xml.Name `xml:"error"`
-	Message string   `xml:"message,attr"`
-}
-
-func (e *apiError) Error() string {
-	return e.Message
-}
-
-// errAccepted is returned by get for HTTP 202, which BGG uses while it queues a request
-var errAccepted = errors.New("request accepted by boardgamegeek but not yet processed")
-
-// errNotXML is returned by get when BGG responds with a non-xml document, e.g. the
-// html page /forum returns for an unknown id
-var errNotXML = errors.New("boardgamegeek returned a non-xml response")
-
 type Client struct {
 	httpClient *http.Client
 	token      string
@@ -90,8 +72,9 @@ func NewClient(options ...ClientOption) *Client {
 }
 
 // get requests path with the given query and unmarshals the xml body into v.
-// BGG's "not found" responses come back as errNotXML, *apiError or *collectionErrors,
-// and HTTP 202 as errAccepted, so each endpoint can report them in its own terms.
+// It returns *AcceptedError for 202, *RateLimitError for 429 and *ErrorResponse for any other
+// non-200 status or for a 200 <error>/<errors> document or non-xml body. 404s and <error>
+// documents match ErrNotFound; endpoints mark their own not-found quirks with markNotFound.
 func (bggClient *Client) get(ctx context.Context, path string, query string, v any) error {
 	reqURL := bggClient.baseURL.JoinPath(path)
 	reqURL.RawQuery = query
@@ -114,16 +97,18 @@ func (bggClient *Client) get(ctx context.Context, path string, query string, v a
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode == http.StatusAccepted {
-		return errAccepted
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status: %s", resp.Status)
+	switch resp.StatusCode {
+	case http.StatusOK:
+	case http.StatusAccepted:
+		return &AcceptedError{Response: resp}
+	case http.StatusTooManyRequests:
+		return &RateLimitError{Response: resp, RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After"))}
+	default:
+		return &ErrorResponse{Response: resp, Message: http.StatusText(resp.StatusCode), notFound: resp.StatusCode == http.StatusNotFound}
 	}
 
 	if !strings.Contains(resp.Header.Get("Content-Type"), "xml") {
-		return errNotXML
+		return &ErrorResponse{Response: resp, Message: fmt.Sprintf("unexpected Content-Type %q", resp.Header.Get("Content-Type"))}
 	}
 
 	body, readErr := io.ReadAll(resp.Body)
@@ -133,12 +118,12 @@ func (bggClient *Client) get(ctx context.Context, path string, query string, v a
 
 	var bggErrResp apiError
 	if xml.Unmarshal(body, &bggErrResp) == nil {
-		return &bggErrResp
+		return &ErrorResponse{Response: resp, Message: bggErrResp.Message, notFound: true}
 	}
 
 	var collectionErrs collectionErrors
 	if xml.Unmarshal(body, &collectionErrs) == nil {
-		return &collectionErrs
+		return &ErrorResponse{Response: resp, Message: strings.Join(collectionErrs.Messages, "; ")}
 	}
 
 	if parseErr := xml.Unmarshal(body, v); parseErr != nil {
@@ -146,6 +131,15 @@ func (bggClient *Client) get(ctx context.Context, path string, query string, v a
 	}
 
 	return nil
+}
+
+// markNotFound makes err match ErrNotFound if it is an *ErrorResponse that notFound reports on
+func markNotFound(err error, notFound func(*ErrorResponse) bool) error {
+	var errResp *ErrorResponse
+	if errors.As(err, &errResp) && notFound(errResp) {
+		errResp.notFound = true
+	}
+	return err
 }
 
 func (bggClient *Client) Search(ctx context.Context, sr *SearchRequest) (*SearchResponse, error) {
@@ -180,29 +174,24 @@ func (bggClient *Client) GetForumList(ctx context.Context, fr *ForumListRequest)
 	return &forumListResponse, nil
 }
 
+// GetForum returns an error matching ErrNotFound for an unknown forum id
 func (bggClient *Client) GetForum(ctx context.Context, fr *ForumRequest) (*ForumResponse, error) {
 	var forumResponse ForumResponse
-	err := bggClient.get(ctx, "/forum", fr.toQueryString(), &forumResponse)
-	// BGG responds to an unknown forum id with a 200 html page rather than xml
-	if errors.Is(err, errNotXML) {
-		return nil, fmt.Errorf("forum %d not found", fr.ID)
-	}
-	if err != nil {
-		return nil, err
+	if err := bggClient.get(ctx, "/forum", fr.toQueryString(), &forumResponse); err != nil {
+		// BGG responds to an unknown forum id with a 200 html page rather than xml
+		err = markNotFound(err, func(e *ErrorResponse) bool {
+			return e.Response.StatusCode == http.StatusOK && strings.Contains(e.Response.Header.Get("Content-Type"), "html")
+		})
+		return nil, fmt.Errorf("forum %d: %w", fr.ID, err)
 	}
 	return &forumResponse, nil
 }
 
+// GetThread returns an error matching ErrNotFound for an unknown thread id
 func (bggClient *Client) GetThread(ctx context.Context, tr *ThreadRequest) (*ThreadResponse, error) {
 	var threadResponse ThreadResponse
-	err := bggClient.get(ctx, "/thread", tr.toQueryString(), &threadResponse)
-	// BGG responds to an unknown thread id with a 200 <error> document
-	var threadErr *apiError
-	if errors.As(err, &threadErr) {
-		return nil, fmt.Errorf("thread %d: %s", tr.ID, threadErr.Message)
-	}
-	if err != nil {
-		return nil, err
+	if err := bggClient.get(ctx, "/thread", tr.toQueryString(), &threadResponse); err != nil {
+		return nil, fmt.Errorf("thread %d: %w", tr.ID, err)
 	}
 	return &threadResponse, nil
 }
@@ -215,44 +204,35 @@ func (bggClient *Client) GetHotItems(ctx context.Context, hr *HotItemsRequest) (
 	return &hotItemsResponse, nil
 }
 
-// GetUser returns a "404 Not Found" status error for an unknown username
+// GetUser returns an error matching ErrNotFound for an unknown username
 func (bggClient *Client) GetUser(ctx context.Context, ur *UserRequest) (*UserResponse, error) {
 	var userResponse UserResponse
 	if err := bggClient.get(ctx, "/user", ur.toQueryString(), &userResponse); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user %s: %w", ur.Name, err)
 	}
 	return &userResponse, nil
 }
 
+// GetGuild returns an error matching ErrNotFound for an unknown guild id
 func (bggClient *Client) GetGuild(ctx context.Context, gr *GuildRequest) (*GuildResponse, error) {
 	var guildResponse GuildResponse
-	err := bggClient.get(ctx, "/guild", gr.toQueryString(), &guildResponse)
-	// BGG responds to an unknown guild id with a 200 <error> document
-	var guildErr *apiError
-	if errors.As(err, &guildErr) {
-		return nil, fmt.Errorf("guild %d: %s", gr.ID, guildErr.Message)
-	}
-	if err != nil {
-		return nil, err
+	if err := bggClient.get(ctx, "/guild", gr.toQueryString(), &guildResponse); err != nil {
+		return nil, fmt.Errorf("guild %d: %w", gr.ID, err)
 	}
 	return &guildResponse, nil
 }
 
-// GetCollection returns ErrCollectionNotReady while BGG is still building the collection;
-// callers should retry the same request after a few seconds.
+// GetCollection returns an *AcceptedError matching ErrCollectionNotReady while BGG is still building
+// the collection; callers should retry the same request after a few seconds.
+// An unknown username returns an error matching ErrNotFound.
 func (bggClient *Client) GetCollection(ctx context.Context, cr *CollectionRequest) (*CollectionResponse, error) {
 	var collectionResponse CollectionResponse
-	err := bggClient.get(ctx, "/collection", cr.toQueryString(), &collectionResponse)
-	if errors.Is(err, errAccepted) {
-		return nil, ErrCollectionNotReady
-	}
-	// BGG responds to an invalid request, e.g. an unknown username, with a 200 <errors> document
-	var collectionErrs *collectionErrors
-	if errors.As(err, &collectionErrs) {
-		return nil, fmt.Errorf("collection for %s: %s", cr.Username, collectionErrs.Error())
-	}
-	if err != nil {
-		return nil, err
+	if err := bggClient.get(ctx, "/collection", cr.toQueryString(), &collectionResponse); err != nil {
+		// BGG responds to an unknown username with a 200 <errors> document
+		err = markNotFound(err, func(e *ErrorResponse) bool {
+			return strings.Contains(e.Message, "Invalid username specified")
+		})
+		return nil, fmt.Errorf("collection for %s: %w", cr.Username, err)
 	}
 	return &collectionResponse, nil
 }

@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"net/http"
 	"testing"
 
 	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
@@ -124,6 +125,9 @@ func TestGetUserUnknownNameReturnsError(t *testing.T) {
 	client := newTestClient()
 
 	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: "zzznosuchuser123xyz"})
-	assert.ErrorContains(t, err, "404")
+	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
+	var errResp *boardgamegeek.ErrorResponse
+	require.ErrorAs(t, err, &errResp)
+	assert.Equal(t, http.StatusNotFound, errResp.Response.StatusCode)
 	assert.Nil(t, response)
 }
