@@ -3,71 +3,71 @@ package integration_test
 import (
 	"testing"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // Catan (base game)
-const catanId int64 = 13
+const catanID int64 = 13
 
 // Catan: Seafarers (expansion)
-const catanSeafarersId int64 = 325
+const catanSeafarersID int64 = 325
 
-func TestGetThingsById(t *testing.T) {
+func TestGetThingsByID(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs: []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs: []int64{catanID},
 	}
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, response.Items, 1)
-	assert.Equal(t, catanId, response.Items[0].Id)
-	assert.Equal(t, string(boardgamegeek.BOARDGAME), response.Items[0].Type)
+	assert.Equal(t, catanID, response.Items[0].ID)
+	assert.Equal(t, string(boardgamegeek.ThingTypeBoardGame), response.Items[0].Type)
 	require.NotNil(t, response.Items[0].YearPublished)
 	assert.Equal(t, "1995", string(*response.Items[0].YearPublished))
 }
 
-func TestGetThingsByMultipleIds(t *testing.T) {
+func TestGetThingsByMultipleIDs(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs: []int64{catanId, catanSeafarersId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs: []int64{catanID, catanSeafarersID},
 	}
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, response.Items, 2)
 
-	var returnedIds []int64
+	var returnedIDs []int64
 	for _, item := range response.Items {
-		returnedIds = append(returnedIds, item.Id)
+		returnedIDs = append(returnedIDs, item.ID)
 	}
-	assert.ElementsMatch(t, []int64{catanId, catanSeafarersId}, returnedIds)
+	assert.ElementsMatch(t, []int64{catanID, catanSeafarersID}, returnedIDs)
 }
 
 func TestGetThingsByType(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:   []int64{catanId, catanSeafarersId},
-		Types: []boardgamegeek.ThingType{boardgamegeek.BOARDGAMEEXPANSION},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:   []int64{catanID, catanSeafarersID},
+		Types: []boardgamegeek.ThingType{boardgamegeek.ThingTypeBoardGameExpansion},
 	}
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, response.Items, 1)
-	assert.Equal(t, catanSeafarersId, response.Items[0].Id)
-	assert.Equal(t, string(boardgamegeek.BOARDGAMEEXPANSION), response.Items[0].Type)
+	assert.Equal(t, catanSeafarersID, response.Items[0].ID)
+	assert.Equal(t, string(boardgamegeek.ThingTypeBoardGameExpansion), response.Items[0].Type)
 }
 
 func TestGetThingsWithVersions(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:      []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:      []int64{catanID},
 		Versions: true,
 	}
 
@@ -80,8 +80,8 @@ func TestGetThingsWithVersions(t *testing.T) {
 func TestGetThingsWithVideos(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:    []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:    []int64{catanID},
 		Videos: true,
 	}
 
@@ -94,8 +94,8 @@ func TestGetThingsWithVideos(t *testing.T) {
 func TestGetThingsWithStats(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:   []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:   []int64{catanID},
 		Stats: true,
 	}
 
@@ -107,8 +107,8 @@ func TestGetThingsWithStats(t *testing.T) {
 func TestGetThingsWithMarketPlace(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:         []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:         []int64{catanID},
 		MarketPlace: true,
 	}
 
@@ -120,8 +120,8 @@ func TestGetThingsWithMarketPlace(t *testing.T) {
 func TestGetThingsWithComments(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:      []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:      []int64{catanID},
 		Comments: true,
 		Page:     1,
 		PageSize: 10,
@@ -137,8 +137,8 @@ func TestGetThingsWithComments(t *testing.T) {
 func TestGetThingsWithRatingComments(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:            []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:            []int64{catanID},
 		RatingComments: true,
 		Page:           1,
 		PageSize:       10,
@@ -157,8 +157,8 @@ func TestGetThingsByPage(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	firstPageRequest := &boardgamegeek.GetThingsRequest{
-		IDs:      []int64{catanId},
+	firstPageRequest := &boardgamegeek.ThingsOptions{
+		IDs:      []int64{catanID},
 		Comments: true,
 		Page:     1,
 		PageSize: 10,
@@ -166,8 +166,8 @@ func TestGetThingsByPage(t *testing.T) {
 	firstPageResponse, err := client.GetThings(ctx, firstPageRequest)
 	require.NoError(t, err)
 
-	secondPageRequest := &boardgamegeek.GetThingsRequest{
-		IDs:      []int64{catanId},
+	secondPageRequest := &boardgamegeek.ThingsOptions{
+		IDs:      []int64{catanID},
 		Comments: true,
 		Page:     2,
 		PageSize: 10,
@@ -183,10 +183,10 @@ func TestGetThingsByPage(t *testing.T) {
 
 // Edge cases
 
-func TestGetThingsByInvalidId(t *testing.T) {
+func TestGetThingsByInvalidID(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
+	request := &boardgamegeek.ThingsOptions{
 		IDs: []int64{999999999},
 	}
 
@@ -195,24 +195,24 @@ func TestGetThingsByInvalidId(t *testing.T) {
 	assert.Empty(t, response.Items)
 }
 
-func TestGetThingsByMixOfValidAndInvalidIds(t *testing.T) {
+func TestGetThingsByMixOfValidAndInvalidIDs(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs: []int64{catanId, 999999999},
+	request := &boardgamegeek.ThingsOptions{
+		IDs: []int64{catanID, 999999999},
 	}
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, response.Items, 1)
-	assert.Equal(t, catanId, response.Items[0].Id)
+	assert.Equal(t, catanID, response.Items[0].ID)
 }
 
 func TestGetThingsOmitsOptionalSectionsByDefault(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs: []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs: []int64{catanID},
 	}
 
 	response, err := client.GetThings(ctx, request)
@@ -229,8 +229,8 @@ func TestGetThingsOmitsOptionalSectionsByDefault(t *testing.T) {
 func TestGetThingsPageAndPageSizeHaveNoEffectWithoutComments(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:      []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:      []int64{catanID},
 		Page:     1,
 		PageSize: 5,
 	}
@@ -243,8 +243,8 @@ func TestGetThingsPageAndPageSizeHaveNoEffectWithoutComments(t *testing.T) {
 func TestGetThingsPageSizeBelowMinimumFallsBackToDefault(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.GetThingsRequest{
-		IDs:      []int64{catanId},
+	request := &boardgamegeek.ThingsOptions{
+		IDs:      []int64{catanID},
 		Comments: true,
 		Page:     1,
 		PageSize: 3,

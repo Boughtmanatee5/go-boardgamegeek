@@ -12,7 +12,7 @@ const (
 	UserDomainVideoGame UserDomain = "videogame"
 )
 
-type UserRequest struct {
+type UserOptions struct {
 	Name    string `url:"name"`
 	Buddies bool   `url:"buddies,int,omitempty"`
 	Guilds  bool   `url:"guilds,int,omitempty"`
@@ -26,7 +26,7 @@ type UserRequest struct {
 
 type UserBuddy struct {
 	XMLName xml.Name `xml:"buddy"`
-	Id      int64    `xml:"id,attr"`
+	ID      int64    `xml:"id,attr"`
 	Name    string   `xml:"name,attr"`
 }
 
@@ -39,7 +39,7 @@ type UserBuddies struct {
 
 type UserGuild struct {
 	XMLName xml.Name `xml:"guild"`
-	Id      int64    `xml:"id,attr"`
+	ID      int64    `xml:"id,attr"`
 	Name    string   `xml:"name,attr"`
 }
 
@@ -54,7 +54,7 @@ type UserRankedItem struct {
 	XMLName xml.Name `xml:"item"`
 	Rank    int      `xml:"rank,attr"`
 	Type    string   `xml:"type,attr"`
-	Id      int64    `xml:"id,attr"`
+	ID      int64    `xml:"id,attr"`
 	Name    string   `xml:"name,attr"`
 }
 
@@ -66,7 +66,7 @@ type UserRankedItems struct {
 
 type UserResponse struct {
 	XMLName          xml.Name         `xml:"user"`
-	Id               int64            `xml:"id,attr"`
+	ID               int64            `xml:"id,attr"`
 	Name             string           `xml:"name,attr"`
 	TermsOfUse       string           `xml:"termsofuse,attr"`
 	FirstName        ValueAttr        `xml:"firstname"`

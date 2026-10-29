@@ -1,4 +1,4 @@
-module github.com/Boughtmanatee5/BoardGameGeekClient
+module github.com/Boughtmanatee5/go-boardgamegeek
 
 go 1.26.6
 

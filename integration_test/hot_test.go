@@ -3,7 +3,7 @@ package integration_test
 import (
 	"testing"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +15,7 @@ func TestGetHotItemsDefaultsToBoardGames(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	response, err := client.GetHotItems(ctx, &boardgamegeek.HotItemsRequest{})
+	response, err := client.GetHotItems(ctx, &boardgamegeek.HotItemsOptions{})
 	require.NoError(t, err)
 	assert.Len(t, response.Items, hotListSize)
 	assert.NotEmpty(t, response.TermsOfUse)
@@ -28,7 +28,7 @@ func TestGetHotItemsDefaultsToBoardGames(t *testing.T) {
 func TestGetHotItemsPopulatesFields(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.HotItemsRequest{
+	request := &boardgamegeek.HotItemsOptions{
 		Type: boardgamegeek.HotItemTypeBoardGame,
 	}
 
@@ -37,7 +37,7 @@ func TestGetHotItemsPopulatesFields(t *testing.T) {
 	require.NotEmpty(t, response.Items)
 
 	item := response.Items[0]
-	assert.NotZero(t, item.Id)
+	assert.NotZero(t, item.ID)
 	assert.NotEmpty(t, item.Name)
 	assert.NotEmpty(t, item.Thumbnail)
 	require.NotNil(t, item.YearPublished)
@@ -48,19 +48,19 @@ func TestGetHotItemsByRPGType(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	boardGames, err := client.GetHotItems(ctx, &boardgamegeek.HotItemsRequest{Type: boardgamegeek.HotItemTypeBoardGame})
+	boardGames, err := client.GetHotItems(ctx, &boardgamegeek.HotItemsOptions{Type: boardgamegeek.HotItemTypeBoardGame})
 	require.NoError(t, err)
-	rpgs, err := client.GetHotItems(ctx, &boardgamegeek.HotItemsRequest{Type: boardgamegeek.HotItemTypeRPG})
+	rpgs, err := client.GetHotItems(ctx, &boardgamegeek.HotItemsOptions{Type: boardgamegeek.HotItemTypeRPG})
 	require.NoError(t, err)
 
 	assert.Len(t, rpgs.Items, hotListSize)
-	assert.NotEqual(t, boardGames.Items[0].Id, rpgs.Items[0].Id)
+	assert.NotEqual(t, boardGames.Items[0].ID, rpgs.Items[0].ID)
 }
 
 func TestGetHotItemsByPersonTypeHasNoYearPublished(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.HotItemsRequest{
+	request := &boardgamegeek.HotItemsOptions{
 		Type: boardgamegeek.HotItemTypeBoardGamePerson,
 	}
 

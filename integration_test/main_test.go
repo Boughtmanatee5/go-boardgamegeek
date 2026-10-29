@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 )
 
 const tokenEnvVar = "BGG_API_TOKEN"

@@ -4,19 +4,19 @@ import (
 	"errors"
 	"testing"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // The 7th Continent, owned by Aldie
-const seventhContinentId int64 = 180263
+const seventhContinentID int64 = 180263
 
 const collectionRetries = 10
 
 // getCollection retries while BGG queues the request, as callers of GetCollection are expected to.
 // The test client's transport spaces out the retries.
-func getCollection(t *testing.T, request *boardgamegeek.CollectionRequest) (*boardgamegeek.CollectionResponse, error) {
+func getCollection(t *testing.T, request *boardgamegeek.CollectionOptions) (*boardgamegeek.CollectionResponse, error) {
 	t.Helper()
 	client := newTestClient()
 
@@ -30,21 +30,21 @@ func getCollection(t *testing.T, request *boardgamegeek.CollectionRequest) (*boa
 	return nil, nil
 }
 
-func TestGetCollectionById(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+func TestGetCollectionByID(t *testing.T) {
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
-		IDs:      []int64{seventhContinentId},
+		IDs:      []int64{seventhContinentID},
 	})
 	require.NoError(t, err)
 	assert.Equal(t, 1, response.TotalItems)
 	require.Len(t, response.Items, 1)
-	assert.Equal(t, seventhContinentId, response.Items[0].ObjectId)
+	assert.Equal(t, seventhContinentID, response.Items[0].ObjectID)
 }
 
 func TestGetCollectionPopulatesFields(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
-		IDs:      []int64{seventhContinentId},
+		IDs:      []int64{seventhContinentID},
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, response.TermsOfUse)
@@ -53,8 +53,8 @@ func TestGetCollectionPopulatesFields(t *testing.T) {
 
 	item := response.Items[0]
 	assert.Equal(t, "thing", item.ObjectType)
-	assert.Equal(t, string(boardgamegeek.BOARDGAME), item.Subtype)
-	assert.NotZero(t, item.CollId)
+	assert.Equal(t, string(boardgamegeek.ThingTypeBoardGame), item.Subtype)
+	assert.NotZero(t, item.CollID)
 	require.NotNil(t, item.Name)
 	assert.Equal(t, "The 7th Continent", item.Name.Value)
 	assert.Equal(t, 5, item.Name.SortIndex)
@@ -71,9 +71,9 @@ func TestGetCollectionPopulatesFields(t *testing.T) {
 }
 
 func TestGetCollectionWithStats(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
-		IDs:      []int64{seventhContinentId},
+		IDs:      []int64{seventhContinentID},
 		Stats:    true,
 	})
 	require.NoError(t, err)
@@ -94,22 +94,22 @@ func TestGetCollectionWithStats(t *testing.T) {
 }
 
 func TestGetCollectionWithVersion(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
-		IDs:      []int64{seventhContinentId},
+		IDs:      []int64{seventhContinentID},
 		Version:  true,
 	})
 	require.NoError(t, err)
 	require.Len(t, response.Items, 1)
 	require.NotNil(t, response.Items[0].Version)
 	assert.Equal(t, "boardgameversion", response.Items[0].Version.Type)
-	assert.NotZero(t, response.Items[0].Version.Id)
+	assert.NotZero(t, response.Items[0].Version.ID)
 }
 
 func TestGetCollectionOwnFilterIncludes(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
-		IDs:      []int64{seventhContinentId},
+		IDs:      []int64{seventhContinentID},
 		Own:      boardgamegeek.Bool(true),
 	})
 	require.NoError(t, err)
@@ -117,9 +117,9 @@ func TestGetCollectionOwnFilterIncludes(t *testing.T) {
 }
 
 func TestGetCollectionOwnFilterExcludes(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
-		IDs:      []int64{seventhContinentId},
+		IDs:      []int64{seventhContinentID},
 		Own:      boardgamegeek.Bool(false),
 	})
 	require.NoError(t, err)
@@ -127,7 +127,7 @@ func TestGetCollectionOwnFilterExcludes(t *testing.T) {
 }
 
 func TestGetCollectionBriefWishlist(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
 		Wishlist: boardgamegeek.Bool(true),
 		Brief:    true,
@@ -144,7 +144,7 @@ func TestGetCollectionBriefWishlist(t *testing.T) {
 }
 
 func TestGetCollectionUnknownUsernameReturnsError(t *testing.T) {
-	response, err := getCollection(t, &boardgamegeek.CollectionRequest{
+	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: "zzznosuchuser123xyz",
 	})
 	assert.ErrorContains(t, err, "Invalid username specified")

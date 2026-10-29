@@ -3,24 +3,24 @@ package integration_test
 import (
 	"testing"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // Dallas Metrogamers, managed by Aldie
-const dallasMetrogamersGuildId int64 = 1
+const dallasMetrogamersGuildID int64 = 1
 
 // BGG returns guild members 25 per page
 const guildMembersPageSize = 25
 
-func TestGetGuildById(t *testing.T) {
+func TestGetGuildByID(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	response, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: dallasMetrogamersGuildId})
+	response, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{ID: dallasMetrogamersGuildID})
 	require.NoError(t, err)
-	assert.Equal(t, dallasMetrogamersGuildId, response.Id)
+	assert.Equal(t, dallasMetrogamersGuildID, response.ID)
 	assert.Equal(t, "Dallas Metrogamers", response.Name)
 }
 
@@ -28,7 +28,7 @@ func TestGetGuildPopulatesFields(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	response, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: dallasMetrogamersGuildId})
+	response, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{ID: dallasMetrogamersGuildID})
 	require.NoError(t, err)
 	assert.NotEmpty(t, response.Created)
 	assert.NotEmpty(t, response.TermsOfUse)
@@ -44,7 +44,7 @@ func TestGetGuildOmitsMembersByDefault(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	response, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: dallasMetrogamersGuildId})
+	response, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{ID: dallasMetrogamersGuildID})
 	require.NoError(t, err)
 	assert.Nil(t, response.Members)
 }
@@ -53,7 +53,7 @@ func TestGetGuildWithMembers(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	response, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: dallasMetrogamersGuildId, Members: true})
+	response, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{ID: dallasMetrogamersGuildID, Members: true})
 	require.NoError(t, err)
 	require.NotNil(t, response.Members)
 	assert.Greater(t, response.Members.Count, guildMembersPageSize)
@@ -67,9 +67,9 @@ func TestGetGuildMembersPaging(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	pageOne, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: dallasMetrogamersGuildId, Members: true, Page: 1})
+	pageOne, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{ID: dallasMetrogamersGuildID, Members: true, Page: 1})
 	require.NoError(t, err)
-	pageTwo, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: dallasMetrogamersGuildId, Members: true, Page: 2})
+	pageTwo, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{ID: dallasMetrogamersGuildID, Members: true, Page: 2})
 	require.NoError(t, err)
 
 	assert.Equal(t, 2, pageTwo.Members.Page)
@@ -81,12 +81,12 @@ func TestGetGuildMembersSort(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	byUsername, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{
-		ID: dallasMetrogamersGuildId, Members: true, Sort: boardgamegeek.GuildMemberSortUsername,
+	byUsername, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{
+		ID: dallasMetrogamersGuildID, Members: true, Sort: boardgamegeek.GuildMemberSortUsername,
 	})
 	require.NoError(t, err)
-	byDate, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{
-		ID: dallasMetrogamersGuildId, Members: true, Sort: boardgamegeek.GuildMemberSortDate,
+	byDate, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{
+		ID: dallasMetrogamersGuildID, Members: true, Sort: boardgamegeek.GuildMemberSortDate,
 	})
 	require.NoError(t, err)
 
@@ -104,7 +104,7 @@ func TestGetGuildUnknownIdReturnsError(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	response, err := client.GetGuild(ctx, &boardgamegeek.GuildRequest{ID: unknownId})
+	response, err := client.GetGuild(ctx, &boardgamegeek.GuildOptions{ID: unknownID})
 	assert.ErrorContains(t, err, "Not Found")
 	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
 	assert.Nil(t, response)

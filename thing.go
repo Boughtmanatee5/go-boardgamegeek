@@ -7,15 +7,15 @@ import (
 type ThingType string
 
 const (
-	RPGITEM            ThingType = "rpgitem"
-	VIDEOGAME          ThingType = "videogame"
-	BOARDGAME          ThingType = "boardgame"
-	BOARDGAMEACCESSORY ThingType = "boardgameaccessory"
-	BOARDGAMEEXPANSION ThingType = "boardgameexpansion"
-	BOARDGAMEDESIGNER  ThingType = "boardgamedesigner"
+	ThingTypeRPGItem            ThingType = "rpgitem"
+	ThingTypeVideoGame          ThingType = "videogame"
+	ThingTypeBoardGame          ThingType = "boardgame"
+	ThingTypeBoardGameAccessory ThingType = "boardgameaccessory"
+	ThingTypeBoardGameExpansion ThingType = "boardgameexpansion"
+	ThingTypeBoardGameDesigner  ThingType = "boardgamedesigner"
 )
 
-type GetThingsRequest struct {
+type ThingsOptions struct {
 	IDs            []int64     `url:"id,comma"`
 	Types          []ThingType `url:"type,comma,omitempty"`
 	Versions       bool        `url:"versions,int,omitempty"`
@@ -36,7 +36,7 @@ type Statistics struct {
 type Version struct {
 	XMLName xml.Name `xml:"item"`
 	Type    string   `xml:"type,attr"`
-	Id      int64    `xml:"id,attr"`
+	ID      int64    `xml:"id,attr"`
 }
 
 type Versions struct {
@@ -46,7 +46,7 @@ type Versions struct {
 
 type Video struct {
 	XMLName xml.Name `xml:"video"`
-	Id      int64    `xml:"id,attr"`
+	ID      int64    `xml:"id,attr"`
 }
 
 type Videos struct {
@@ -81,7 +81,7 @@ type MarketplaceListings struct {
 type Thing struct {
 	XMLName             xml.Name             `xml:"item"`
 	Type                string               `xml:"type,attr"`
-	Id                  int64                `xml:"id,attr"`
+	ID                  int64                `xml:"id,attr"`
 	Names               []*Name              `xml:"name"`
 	YearPublished       *ValueAttr           `xml:"yearpublished"`
 	Statistics          *Statistics          `xml:"statistics"`
@@ -91,7 +91,7 @@ type Thing struct {
 	MarketplaceListings *MarketplaceListings `xml:"marketplacelistings"`
 }
 
-type GetThingsResponse struct {
+type ThingsResponse struct {
 	XMLName xml.Name `xml:"items"`
 	Items   []*Thing `xml:"item"`
 }

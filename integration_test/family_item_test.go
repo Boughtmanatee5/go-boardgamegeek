@@ -3,35 +3,35 @@ package integration_test
 import (
 	"testing"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 )
 
 // Game: Catan family
-const catanFamilyId int64 = 3
+const catanFamilyID int64 = 3
 
 // Crowdfunding: Kickstarter family
-const kickstarterFamilyId int64 = 8374
+const kickstarterFamilyID int64 = 8374
 
-func TestGetFamilyItemsById(t *testing.T) {
+func TestGetFamilyItemsByID(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.FamilyItemRequest{
-		IDs: []int64{catanFamilyId},
+	request := &boardgamegeek.FamilyItemsOptions{
+		IDs: []int64{catanFamilyID},
 	}
 
 	response, err := client.GetFamilyItems(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, response.Items, 1)
-	assert.Equal(t, catanFamilyId, response.Items[0].Id)
+	assert.Equal(t, catanFamilyID, response.Items[0].ID)
 	assert.Equal(t, string(boardgamegeek.FamilyItemTypeBoardGameFamily), response.Items[0].Type)
 }
 
 func TestGetFamilyItemsPopulatesFields(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.FamilyItemRequest{
-		IDs: []int64{catanFamilyId},
+	request := &boardgamegeek.FamilyItemsOptions{
+		IDs: []int64{catanFamilyID},
 	}
 
 	response, err := client.GetFamilyItems(ctx, request)
@@ -47,37 +47,37 @@ func TestGetFamilyItemsPopulatesFields(t *testing.T) {
 	assert.NotEmpty(t, item.Links)
 
 	// Catan (13) is a member of the Game: Catan family
-	var linkedIds []int64
+	var linkedIDs []int64
 	for _, link := range item.Links {
-		linkedIds = append(linkedIds, link.Id)
+		linkedIDs = append(linkedIDs, link.ID)
 	}
-	assert.Contains(t, linkedIds, catanId)
+	assert.Contains(t, linkedIDs, catanID)
 	assert.True(t, item.Links[0].Inbound)
 }
 
-func TestGetFamilyItemsByMultipleIds(t *testing.T) {
+func TestGetFamilyItemsByMultipleIDs(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.FamilyItemRequest{
-		IDs: []int64{catanFamilyId, kickstarterFamilyId},
+	request := &boardgamegeek.FamilyItemsOptions{
+		IDs: []int64{catanFamilyID, kickstarterFamilyID},
 	}
 
 	response, err := client.GetFamilyItems(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, response.Items, 2)
 
-	var returnedIds []int64
+	var returnedIDs []int64
 	for _, item := range response.Items {
-		returnedIds = append(returnedIds, item.Id)
+		returnedIDs = append(returnedIDs, item.ID)
 	}
-	assert.ElementsMatch(t, []int64{catanFamilyId, kickstarterFamilyId}, returnedIds)
+	assert.ElementsMatch(t, []int64{catanFamilyID, kickstarterFamilyID}, returnedIDs)
 }
 
 func TestGetFamilyItemsByType(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.FamilyItemRequest{
-		IDs:   []int64{catanFamilyId},
+	request := &boardgamegeek.FamilyItemsOptions{
+		IDs:   []int64{catanFamilyID},
 		Types: []boardgamegeek.FamilyItemType{boardgamegeek.FamilyItemTypeBoardGameFamily},
 	}
 
@@ -92,8 +92,8 @@ func TestGetFamilyItemsByType(t *testing.T) {
 func TestGetFamilyItemsByNonMatchingType(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.FamilyItemRequest{
-		IDs:   []int64{catanFamilyId},
+	request := &boardgamegeek.FamilyItemsOptions{
+		IDs:   []int64{catanFamilyID},
 		Types: []boardgamegeek.FamilyItemType{boardgamegeek.FamilyItemTypeRPG},
 	}
 
@@ -102,10 +102,10 @@ func TestGetFamilyItemsByNonMatchingType(t *testing.T) {
 	assert.Empty(t, response.Items)
 }
 
-func TestGetFamilyItemsByInvalidId(t *testing.T) {
+func TestGetFamilyItemsByInvalidID(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.FamilyItemRequest{
+	request := &boardgamegeek.FamilyItemsOptions{
 		IDs: []int64{999999999},
 	}
 
@@ -114,15 +114,15 @@ func TestGetFamilyItemsByInvalidId(t *testing.T) {
 	assert.Empty(t, response.Items)
 }
 
-func TestGetFamilyItemsByMixOfValidAndInvalidIds(t *testing.T) {
+func TestGetFamilyItemsByMixOfValidAndInvalidIDs(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.FamilyItemRequest{
-		IDs: []int64{catanFamilyId, 999999999},
+	request := &boardgamegeek.FamilyItemsOptions{
+		IDs: []int64{catanFamilyID, 999999999},
 	}
 
 	response, err := client.GetFamilyItems(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, response.Items, 1)
-	assert.Equal(t, catanFamilyId, response.Items[0].Id)
+	assert.Equal(t, catanFamilyID, response.Items[0].ID)
 }

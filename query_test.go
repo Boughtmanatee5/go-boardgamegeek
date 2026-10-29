@@ -18,67 +18,67 @@ func TestRequestQueryEncoding(t *testing.T) {
 	}{
 		{
 			name:    "search escapes reserved characters",
-			request: &SearchRequest{Query: "Ticket & Ride: Europe"},
+			request: &SearchOptions{Query: "Ticket & Ride: Europe"},
 			want:    "query=Ticket+%26+Ride%3A+Europe",
 		},
 		{
 			name:    "search with types and exact",
-			request: &SearchRequest{Query: "catan", Types: []ThingType{BOARDGAME, BOARDGAMEEXPANSION}, Exact: true},
+			request: &SearchOptions{Query: "catan", Types: []ThingType{ThingTypeBoardGame, ThingTypeBoardGameExpansion}, Exact: true},
 			want:    "exact=1&query=catan&type=boardgame%2Cboardgameexpansion",
 		},
 		{
 			name:    "search keeps an empty query",
-			request: &SearchRequest{},
+			request: &SearchOptions{},
 			want:    "query=",
 		},
 		{
 			name:    "things with flags and paging",
-			request: &GetThingsRequest{IDs: []int64{1, 2}, Stats: true, Comments: true, Page: 2, PageSize: 50},
+			request: &ThingsOptions{IDs: []int64{1, 2}, Stats: true, Comments: true, Page: 2, PageSize: 50},
 			want:    "comments=1&id=1%2C2&page=2&pagesize=50&stats=1",
 		},
 		{
 			name:    "things omits false flags and zero paging",
-			request: &GetThingsRequest{IDs: []int64{13}},
+			request: &ThingsOptions{IDs: []int64{13}},
 			want:    "id=13",
 		},
 		{
 			name:    "family with types",
-			request: &FamilyItemRequest{IDs: []int64{3}, Types: []FamilyItemType{FamilyItemTypeBoardGameFamily}},
+			request: &FamilyItemsOptions{IDs: []int64{3}, Types: []FamilyItemType{FamilyItemTypeBoardGameFamily}},
 			want:    "id=3&type=boardgamefamily",
 		},
 		{
 			name:    "forum list",
-			request: &ForumListRequest{ID: 13, Type: ForumListTypeThing},
+			request: &ForumListOptions{ID: 13, Type: ForumListTypeThing},
 			want:    "id=13&type=thing",
 		},
 		{
 			name:    "forum page",
-			request: &ForumRequest{ID: 13, Page: 3},
+			request: &ForumOptions{ID: 13, Page: 3},
 			want:    "id=13&page=3",
 		},
 		{
 			name:    "thread escapes the date",
-			request: &ThreadRequest{ID: 5, MinArticleDate: "2020-01-01 10:00:00", Count: 2},
+			request: &ThreadOptions{ID: 5, MinArticleDate: "2020-01-01 10:00:00", Count: 2},
 			want:    "count=2&id=5&minarticledate=2020-01-01+10%3A00%3A00",
 		},
 		{
 			name:    "hot without type is empty",
-			request: &HotItemsRequest{},
+			request: &HotItemsOptions{},
 			want:    "",
 		},
 		{
 			name:    "user with options",
-			request: &UserRequest{Name: "some user", Buddies: true, Domain: UserDomainRPG, Page: 2},
+			request: &UserOptions{Name: "some user", Buddies: true, Domain: UserDomainRPG, Page: 2},
 			want:    "buddies=1&domain=rpg&name=some+user&page=2",
 		},
 		{
 			name:    "guild with members",
-			request: &GuildRequest{ID: 1, Members: true, Sort: GuildMemberSortDate},
+			request: &GuildOptions{ID: 1, Members: true, Sort: GuildMemberSortDate},
 			want:    "id=1&members=1&sort=date",
 		},
 		{
 			name: "collection status filters encode nil, true and false",
-			request: &CollectionRequest{
+			request: &CollectionOptions{
 				Username:  "Aldie",
 				Own:       Bool(true),
 				Wishlist:  Bool(false),

@@ -62,7 +62,7 @@ Phases 1, 3 and 4 kept the public API; Phase 2 changed `NewClient`. The remainin
   BGG returns paging in the xml body and sends no rate-limit headers, and the typed errors already carry the `*http.Response`.
 - Rename the request types from `XxxRequest` to `XxxOptions`.
 - Rename `Id` to `ID` and the constants to `ThingTypeBoardGame` style, and use short receivers.
-- Fix the module path/package name mismatch (rename the module, or move the code into a subdirectory).
+- Fix the module path/package name mismatch. Decision (2026-10-29): rename the repo and module to `github.com/Boughtmanatee5/go-boardgamegeek`, keeping package `boardgamegeek` (the go-github convention).
 
 ### Phase 6: Pagination and retries
 - Embed a shared `ListOptions{Page, PageSize}`.

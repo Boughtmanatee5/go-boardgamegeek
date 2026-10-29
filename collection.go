@@ -9,12 +9,12 @@ import (
 // the collection request (HTTP 202). Retry the same request after a few seconds.
 var ErrCollectionNotReady = errors.New("collection request queued by boardgamegeek, retry later")
 
-// Bool returns a pointer to b, for the optional filters on CollectionRequest.
+// Bool returns a pointer to b, for the optional filters on CollectionOptions.
 func Bool(b bool) *bool {
 	return &b
 }
 
-type CollectionRequest struct {
+type CollectionOptions struct {
 	// Username is required
 	Username       string    `url:"username"`
 	Version        bool      `url:"version,int,omitempty"`
@@ -79,7 +79,7 @@ type CollectionStatus struct {
 type CollectionRank struct {
 	XMLName      xml.Name `xml:"rank"`
 	Type         string   `xml:"type,attr"`
-	Id           int64    `xml:"id,attr"`
+	ID           int64    `xml:"id,attr"`
 	Name         string   `xml:"name,attr"`
 	FriendlyName string   `xml:"friendlyname,attr"`
 	// Value and BayesAverage are "Not Ranked" for unranked items
@@ -113,9 +113,9 @@ type CollectionStats struct {
 type CollectionItem struct {
 	XMLName         xml.Name          `xml:"item"`
 	ObjectType      string            `xml:"objecttype,attr"`
-	ObjectId        int64             `xml:"objectid,attr"`
+	ObjectID        int64             `xml:"objectid,attr"`
 	Subtype         string            `xml:"subtype,attr"`
-	CollId          int64             `xml:"collid,attr"`
+	CollID          int64             `xml:"collid,attr"`
 	Name            *CollectionName   `xml:"name"`
 	OriginalName    string            `xml:"originalname"`
 	YearPublished   string            `xml:"yearpublished"`

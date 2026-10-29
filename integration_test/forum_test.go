@@ -3,49 +3,49 @@ package integration_test
 import (
 	"testing"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // Catan: Rules forum
-const catanRulesForumId int64 = 1508
+const catanRulesForumID int64 = 1508
 
 // An id with no forum or thread behind it
-const unknownId int64 = 999999999
+const unknownID int64 = 999999999
 
 func TestGetForumListByThing(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumListRequest{
-		ID:   catanId,
+	request := &boardgamegeek.ForumListOptions{
+		ID:   catanID,
 		Type: boardgamegeek.ForumListTypeThing,
 	}
 
 	response, err := client.GetForumList(ctx, request)
 	require.NoError(t, err)
-	assert.Equal(t, catanId, response.Id)
+	assert.Equal(t, catanID, response.ID)
 	assert.Equal(t, string(boardgamegeek.ForumListTypeThing), response.Type)
 	assert.NotEmpty(t, response.Forums)
 
-	var forumIds []int64
+	var forumIDs []int64
 	for _, forum := range response.Forums {
-		forumIds = append(forumIds, forum.Id)
+		forumIDs = append(forumIDs, forum.ID)
 	}
-	assert.Contains(t, forumIds, catanRulesForumId)
+	assert.Contains(t, forumIDs, catanRulesForumID)
 }
 
 func TestGetForumListByFamily(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumListRequest{
-		ID:   catanFamilyId,
+	request := &boardgamegeek.ForumListOptions{
+		ID:   catanFamilyID,
 		Type: boardgamegeek.ForumListTypeFamily,
 	}
 
 	response, err := client.GetForumList(ctx, request)
 	require.NoError(t, err)
-	assert.Equal(t, catanFamilyId, response.Id)
+	assert.Equal(t, catanFamilyID, response.ID)
 	assert.Equal(t, string(boardgamegeek.ForumListTypeFamily), response.Type)
 	assert.NotEmpty(t, response.Forums)
 }
@@ -53,8 +53,8 @@ func TestGetForumListByFamily(t *testing.T) {
 func TestGetForumListPopulatesFields(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumListRequest{
-		ID:   catanId,
+	request := &boardgamegeek.ForumListOptions{
+		ID:   catanID,
 		Type: boardgamegeek.ForumListTypeThing,
 	}
 
@@ -64,7 +64,7 @@ func TestGetForumListPopulatesFields(t *testing.T) {
 
 	var rules *boardgamegeek.ForumSummary
 	for _, forum := range response.Forums {
-		if forum.Id == catanRulesForumId {
+		if forum.ID == catanRulesForumID {
 			rules = forum
 		}
 	}
@@ -80,8 +80,8 @@ func TestGetForumListPopulatesFields(t *testing.T) {
 func TestGetForumListUnknownIdReturnsEmptyForums(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumListRequest{
-		ID:   unknownId,
+	request := &boardgamegeek.ForumListOptions{
+		ID:   unknownID,
 		Type: boardgamegeek.ForumListTypeThing,
 	}
 
@@ -94,16 +94,16 @@ func TestGetForumListUnknownIdReturnsEmptyForums(t *testing.T) {
 	}
 }
 
-func TestGetForumById(t *testing.T) {
+func TestGetForumByID(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumRequest{
-		ID: catanRulesForumId,
+	request := &boardgamegeek.ForumOptions{
+		ID: catanRulesForumID,
 	}
 
 	response, err := client.GetForum(ctx, request)
 	require.NoError(t, err)
-	assert.Equal(t, catanRulesForumId, response.Id)
+	assert.Equal(t, catanRulesForumID, response.ID)
 	assert.Equal(t, "Rules", response.Title)
 	assert.NotEmpty(t, response.Threads)
 }
@@ -111,8 +111,8 @@ func TestGetForumById(t *testing.T) {
 func TestGetForumPopulatesFields(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumRequest{
-		ID: catanRulesForumId,
+	request := &boardgamegeek.ForumOptions{
+		ID: catanRulesForumID,
 	}
 
 	response, err := client.GetForum(ctx, request)
@@ -122,7 +122,7 @@ func TestGetForumPopulatesFields(t *testing.T) {
 	assert.NotEmpty(t, response.TermsOfUse)
 
 	thread := response.Threads[0]
-	assert.NotZero(t, thread.Id)
+	assert.NotZero(t, thread.ID)
 	assert.NotEmpty(t, thread.Subject)
 	assert.NotEmpty(t, thread.Author)
 	assert.Positive(t, thread.NumArticles)
@@ -134,35 +134,35 @@ func TestGetForumPaging(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	pageOne, err := client.GetForum(ctx, &boardgamegeek.ForumRequest{ID: catanRulesForumId, Page: 1})
+	pageOne, err := client.GetForum(ctx, &boardgamegeek.ForumOptions{ID: catanRulesForumID, Page: 1})
 	require.NoError(t, err)
-	pageTwo, err := client.GetForum(ctx, &boardgamegeek.ForumRequest{ID: catanRulesForumId, Page: 2})
+	pageTwo, err := client.GetForum(ctx, &boardgamegeek.ForumOptions{ID: catanRulesForumID, Page: 2})
 	require.NoError(t, err)
 
 	require.NotEmpty(t, pageOne.Threads)
 	require.NotEmpty(t, pageTwo.Threads)
-	assert.NotEqual(t, pageOne.Threads[0].Id, pageTwo.Threads[0].Id)
+	assert.NotEqual(t, pageOne.Threads[0].ID, pageTwo.Threads[0].ID)
 }
 
 func TestGetForumPagePastEndIsEmpty(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumRequest{
-		ID:   catanRulesForumId,
+	request := &boardgamegeek.ForumOptions{
+		ID:   catanRulesForumID,
 		Page: 999,
 	}
 
 	response, err := client.GetForum(ctx, request)
 	require.NoError(t, err)
-	assert.Equal(t, catanRulesForumId, response.Id)
+	assert.Equal(t, catanRulesForumID, response.ID)
 	assert.Empty(t, response.Threads)
 }
 
 func TestGetForumUnknownIdReturnsError(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	request := &boardgamegeek.ForumRequest{
-		ID: unknownId,
+	request := &boardgamegeek.ForumOptions{
+		ID: unknownID,
 	}
 
 	response, err := client.GetForum(ctx, request)

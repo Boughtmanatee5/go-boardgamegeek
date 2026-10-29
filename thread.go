@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 )
 
-type ThreadRequest struct {
+type ThreadOptions struct {
 	ID           int64 `url:"id"`
 	MinArticleID int64 `url:"minarticleid,omitempty"`
 	// MinArticleDate is YYYY-MM-DD or YYYY-MM-DD HH:MM:SS
@@ -14,7 +14,7 @@ type ThreadRequest struct {
 
 type Article struct {
 	XMLName  xml.Name `xml:"article"`
-	Id       int64    `xml:"id,attr"`
+	ID       int64    `xml:"id,attr"`
 	Username string   `xml:"username,attr"`
 	Link     string   `xml:"link,attr"`
 	PostDate string   `xml:"postdate,attr"`
@@ -26,7 +26,7 @@ type Article struct {
 
 type ThreadResponse struct {
 	XMLName     xml.Name   `xml:"thread"`
-	Id          int64      `xml:"id,attr"`
+	ID          int64      `xml:"id,attr"`
 	NumArticles int        `xml:"numarticles,attr"`
 	Link        string     `xml:"link,attr"`
 	TermsOfUse  string     `xml:"termsofuse,attr"`

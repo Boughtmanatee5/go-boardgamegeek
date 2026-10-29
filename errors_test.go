@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +39,7 @@ func xmlHeader() http.Header {
 func TestAcceptedMatchesErrCollectionNotReady(t *testing.T) {
 	client := newStubClient(t, http.StatusAccepted, xmlHeader(), "")
 
-	_, err := client.GetCollection(t.Context(), &boardgamegeek.CollectionRequest{Username: "someone"})
+	_, err := client.GetCollection(t.Context(), &boardgamegeek.CollectionOptions{Username: "someone"})
 	var accepted *boardgamegeek.AcceptedError
 	assert.ErrorAs(t, err, &accepted)
 	assert.ErrorIs(t, err, boardgamegeek.ErrCollectionNotReady)
@@ -48,7 +48,7 @@ func TestAcceptedMatchesErrCollectionNotReady(t *testing.T) {
 func TestTooManyRequestsReturnsRateLimitError(t *testing.T) {
 	client := newStubClient(t, http.StatusTooManyRequests, http.Header{"Retry-After": {"30"}}, "")
 
-	_, err := client.GetThings(t.Context(), &boardgamegeek.GetThingsRequest{IDs: []int64{1}})
+	_, err := client.GetThings(t.Context(), &boardgamegeek.ThingsOptions{IDs: []int64{1}})
 	var rateLimitErr *boardgamegeek.RateLimitError
 	require.ErrorAs(t, err, &rateLimitErr)
 	assert.Equal(t, 30*time.Second, rateLimitErr.RetryAfter)
@@ -58,7 +58,7 @@ func TestTooManyRequestsReturnsRateLimitError(t *testing.T) {
 func TestServerErrorIsNotErrNotFound(t *testing.T) {
 	client := newStubClient(t, http.StatusInternalServerError, nil, "")
 
-	_, err := client.GetThings(t.Context(), &boardgamegeek.GetThingsRequest{IDs: []int64{1}})
+	_, err := client.GetThings(t.Context(), &boardgamegeek.ThingsOptions{IDs: []int64{1}})
 	var errResp *boardgamegeek.ErrorResponse
 	require.ErrorAs(t, err, &errResp)
 	assert.Equal(t, http.StatusInternalServerError, errResp.Response.StatusCode)
@@ -68,7 +68,7 @@ func TestServerErrorIsNotErrNotFound(t *testing.T) {
 func TestErrorDocumentMatchesErrNotFound(t *testing.T) {
 	client := newStubClient(t, http.StatusOK, xmlHeader(), `<error message="Guild not found" />`)
 
-	_, err := client.GetGuild(t.Context(), &boardgamegeek.GuildRequest{ID: 1})
+	_, err := client.GetGuild(t.Context(), &boardgamegeek.GuildOptions{ID: 1})
 	var errResp *boardgamegeek.ErrorResponse
 	require.ErrorAs(t, err, &errResp)
 	assert.Equal(t, "Guild not found", errResp.Message)
@@ -78,7 +78,7 @@ func TestErrorDocumentMatchesErrNotFound(t *testing.T) {
 func TestCollectionOtherErrorsAreNotErrNotFound(t *testing.T) {
 	client := newStubClient(t, http.StatusOK, xmlHeader(), `<errors><error><message>Invalid parameter</message></error></errors>`)
 
-	_, err := client.GetCollection(t.Context(), &boardgamegeek.CollectionRequest{Username: "someone"})
+	_, err := client.GetCollection(t.Context(), &boardgamegeek.CollectionOptions{Username: "someone"})
 	var errResp *boardgamegeek.ErrorResponse
 	require.ErrorAs(t, err, &errResp)
 	assert.Equal(t, "Invalid parameter", errResp.Message)
@@ -89,11 +89,11 @@ func TestHTMLIsErrNotFoundOnlyForForum(t *testing.T) {
 	htmlHeader := http.Header{"Content-Type": {"text/html; charset=utf-8"}}
 
 	forumClient := newStubClient(t, http.StatusOK, htmlHeader, "<html></html>")
-	_, err := forumClient.GetForum(t.Context(), &boardgamegeek.ForumRequest{ID: 1})
+	_, err := forumClient.GetForum(t.Context(), &boardgamegeek.ForumOptions{ID: 1})
 	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
 
 	searchClient := newStubClient(t, http.StatusOK, htmlHeader, "<html></html>")
-	_, err = searchClient.Search(t.Context(), &boardgamegeek.SearchRequest{Query: "x"})
+	_, err = searchClient.Search(t.Context(), &boardgamegeek.SearchOptions{Query: "x"})
 	var errResp *boardgamegeek.ErrorResponse
 	assert.ErrorAs(t, err, &errResp)
 	assert.False(t, errors.Is(err, boardgamegeek.ErrNotFound))

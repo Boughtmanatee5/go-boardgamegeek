@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 )
 
-type SearchRequest struct {
+type SearchOptions struct {
 	Query string      `url:"query"`
 	Types []ThingType `url:"type,comma,omitempty"`
 	Exact bool        `url:"exact,int,omitempty"`
@@ -34,7 +34,7 @@ type SearchItem struct {
 	XMLName       xml.Name   `xml:"item"`
 	Text          string     `xml:",chardata"`
 	Type          string     `xml:"type,attr"`
-	Id            int64      `xml:"id,attr"`
+	ID            int64      `xml:"id,attr"`
 	Name          *Name      `xml:"name"`
 	YearPublished *ValueAttr `xml:"yearpublished"`
 }

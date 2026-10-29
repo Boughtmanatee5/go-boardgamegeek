@@ -11,15 +11,15 @@ const (
 	ForumListTypeFamily ForumListType = "family"
 )
 
-type ForumListRequest struct {
+type ForumListOptions struct {
 	ID   int64         `url:"id"`
 	Type ForumListType `url:"type"`
 }
 
 type ForumSummary struct {
 	XMLName      xml.Name `xml:"forum"`
-	Id           int64    `xml:"id,attr"`
-	GroupId      int64    `xml:"groupid,attr"`
+	ID           int64    `xml:"id,attr"`
+	GroupID      int64    `xml:"groupid,attr"`
 	Title        string   `xml:"title,attr"`
 	NoPosting    bool     `xml:"noposting,attr"`
 	Description  string   `xml:"description,attr"`
@@ -31,19 +31,19 @@ type ForumSummary struct {
 type ForumListResponse struct {
 	XMLName    xml.Name        `xml:"forums"`
 	Type       string          `xml:"type,attr"`
-	Id         int64           `xml:"id,attr"`
+	ID         int64           `xml:"id,attr"`
 	TermsOfUse string          `xml:"termsofuse,attr"`
 	Forums     []*ForumSummary `xml:"forum"`
 }
 
-type ForumRequest struct {
+type ForumOptions struct {
 	ID   int64 `url:"id"`
 	Page int   `url:"page,omitempty"`
 }
 
 type ThreadSummary struct {
 	XMLName      xml.Name `xml:"thread"`
-	Id           int64    `xml:"id,attr"`
+	ID           int64    `xml:"id,attr"`
 	Subject      string   `xml:"subject,attr"`
 	Author       string   `xml:"author,attr"`
 	NumArticles  int      `xml:"numarticles,attr"`
@@ -53,7 +53,7 @@ type ThreadSummary struct {
 
 type ForumResponse struct {
 	XMLName    xml.Name `xml:"forum"`
-	Id         int64    `xml:"id,attr"`
+	ID         int64    `xml:"id,attr"`
 	Title      string   `xml:"title,attr"`
 	NumThreads int      `xml:"numthreads,attr"`
 	NumPosts   int      `xml:"numposts,attr"`

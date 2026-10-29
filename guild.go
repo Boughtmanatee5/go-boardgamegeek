@@ -11,7 +11,7 @@ const (
 	GuildMemberSortDate     GuildMemberSort = "date"
 )
 
-type GuildRequest struct {
+type GuildOptions struct {
 	ID      int64 `url:"id"`
 	Members bool  `url:"members,int,omitempty"`
 	// Sort orders the members list, defaults to username
@@ -45,7 +45,7 @@ type GuildMembers struct {
 
 type GuildResponse struct {
 	XMLName     xml.Name       `xml:"guild"`
-	Id          int64          `xml:"id,attr"`
+	ID          int64          `xml:"id,attr"`
 	Name        string         `xml:"name,attr"`
 	Created     string         `xml:"created,attr"`
 	TermsOfUse  string         `xml:"termsofuse,attr"`

@@ -17,14 +17,14 @@ const (
 	HotItemTypeVideoGameCompany HotItemType = "videogamecompany"
 )
 
-// HotItemsRequest takes a single Type: BGG ignores a list of types and falls back to boardgame.
-type HotItemsRequest struct {
+// HotItemsOptions takes a single Type: BGG ignores a list of types and falls back to boardgame.
+type HotItemsOptions struct {
 	Type HotItemType `url:"type,omitempty"`
 }
 
 type HotItem struct {
 	XMLName   xml.Name  `xml:"item"`
-	Id        int64     `xml:"id,attr"`
+	ID        int64     `xml:"id,attr"`
 	Rank      int       `xml:"rank,attr"`
 	Thumbnail ValueAttr `xml:"thumbnail"`
 	Name      ValueAttr `xml:"name"`

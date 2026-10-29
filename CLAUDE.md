@@ -11,6 +11,11 @@ This is a go client to interface with boardgamegeek.com's api xmlapi2.
 The goal is to build clean go structs and interfaces to simplify making API requests to boardgamegeek.
 
 ## Architecture
+0. The module is `github.com/Boughtmanatee5/go-boardgamegeek` and the package is `boardgamegeek`, so callers import it without an alias.
+   Naming follows Go conventions:
+    - request params are `XxxOptions` and responses `XxxResponse`; methods return `(*XxxResponse, error)`
+    - initialisms are upper case (`ID`, `CollID`)
+    - enum constants are prefixed with their type (`ThingTypeBoardGame`, `HotItemTypeRPG`)
 1. https://boardgamegeek.com/wiki/page/BGG_XML_API2 is the source of truth for boardgamegeek xmlapi2 don't invent fields; check them against a real response.
 2. client.go contains the main struct Client.
     - Client contains all the methods that make requests to boardgamegeek
@@ -24,7 +29,7 @@ The goal is to build clean go structs and interfaces to simplify making API requ
     - `ErrNotFound` matches every not-found shape through `ErrorResponse.Is`. `get` marks 404s and `<error>` documents.
       Endpoints mark their own quirks with `markNotFound`, so an unrelated html page or validation error is not reported as not found
 3. Each boardgamegeek entity has its own file. E.g. search.go, thing.go and family_item.go contain definitions for the SearchItem, Thing and FamilyItem entities
-    - forum.go covers both `/forumlist` (ForumListRequest/ForumListResponse) and `/forum` (ForumRequest/ForumResponse); thread.go covers `/thread`
+    - forum.go covers both `/forumlist` (ForumListOptions/ForumListResponse) and `/forum` (ForumOptions/ForumResponse); thread.go covers `/thread`
     - hot.go, user.go, guild.go and collection.go cover `/hot`, `/user`, `/guild` and `/collection`
     - Shared element types live in search.go: `Name`, and `ValueAttr`, a string type whose `UnmarshalXML` reads the `value` attribute of any `<x value="..."/>` element. Use `ValueAttr` for those elements instead of a wrapper struct, and `*ValueAttr` when the element is optional
     - BGG often signals "not found" with HTTP 200:
@@ -42,9 +47,9 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 
 ## Adding a new boardgamegeek XMLAPI2 endpoint
 1. Create a file for the new endpoint
-2. Define an XxxRequest struct with `url:"..."` tags for every field (go-querystring): `comma` for lists, `int,omitempty` for flags BGG takes as 1/0, `omitempty` for optional params. Add the expected encoding to query_test.go
+2. Define an XxxOptions struct with `url:"..."` tags for every field (go-querystring): `comma` for lists, `int,omitempty` for flags BGG takes as 1/0, `omitempty` for optional params. Add the expected encoding to query_test.go
 3. Add response structs with `xml` tags taken from the API wiki. Optional sections are pointers so they come back nil when absent.
-4. Add a `Client` method that calls `bggClient.get` and maps any endpoint-specific "not found" error
+4. Add a `Client` method (receiver `c`, parameter `opts *XxxOptions`) that calls `c.get` and maps any endpoint-specific "not found" error
 5. Add tests under `integration_test/`
 6. Update `features.json`
 

@@ -3,7 +3,7 @@ package integration_test
 import (
 	"testing"
 
-	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/Boughtmanatee5/go-boardgamegeek"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,7 +11,7 @@ import (
 func TestSearch(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "guards of atlantis II",
 	}
 
@@ -23,9 +23,9 @@ func TestSearch(t *testing.T) {
 func TestSearchByThingType(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "guards of atlantis II",
-		Types: []boardgamegeek.ThingType{boardgamegeek.BOARDGAME},
+		Types: []boardgamegeek.ThingType{boardgamegeek.ThingTypeBoardGame},
 	}
 
 	response, err := client.Search(ctx, searchRequest)
@@ -33,14 +33,14 @@ func TestSearchByThingType(t *testing.T) {
 	assert.Equal(t, int(response.Total), len(response.Items))
 
 	for _, item := range response.Items {
-		assert.Equal(t, string(boardgamegeek.BOARDGAME), item.Type)
+		assert.Equal(t, string(boardgamegeek.ThingTypeBoardGame), item.Type)
 	}
 }
 
 func TestSearchByExact(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "guards of atlantis II",
 		Exact: true,
 	}
@@ -49,7 +49,7 @@ func TestSearchByExact(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(response.Items))
 	// gaurds of atlantis 2 id
-	assert.Equal(t, int64(267609), response.Items[0].Id)
+	assert.Equal(t, int64(267609), response.Items[0].ID)
 	require.NotNil(t, response.Items[0].YearPublished)
 	assert.Equal(t, "2022", string(*response.Items[0].YearPublished))
 }
@@ -57,9 +57,9 @@ func TestSearchByExact(t *testing.T) {
 func TestSearchByMultipleTypes(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "catan",
-		Types: []boardgamegeek.ThingType{boardgamegeek.BOARDGAME, boardgamegeek.BOARDGAMEEXPANSION},
+		Types: []boardgamegeek.ThingType{boardgamegeek.ThingTypeBoardGame, boardgamegeek.ThingTypeBoardGameExpansion},
 	}
 
 	response, err := client.Search(ctx, searchRequest)
@@ -67,7 +67,7 @@ func TestSearchByMultipleTypes(t *testing.T) {
 	assert.Equal(t, int(response.Total), len(response.Items))
 
 	for _, item := range response.Items {
-		assert.Contains(t, []string{string(boardgamegeek.BOARDGAME), string(boardgamegeek.BOARDGAMEEXPANSION)}, item.Type)
+		assert.Contains(t, []string{string(boardgamegeek.ThingTypeBoardGame), string(boardgamegeek.ThingTypeBoardGameExpansion)}, item.Type)
 	}
 }
 
@@ -76,7 +76,7 @@ func TestSearchByMultipleTypes(t *testing.T) {
 func TestSearchWithNoResults(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "zzzzznonexistentgamexyz123",
 	}
 
@@ -89,7 +89,7 @@ func TestSearchWithNoResults(t *testing.T) {
 func TestSearchWithEmptyQuery(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "",
 	}
 
@@ -103,10 +103,10 @@ func TestSearchIsCaseInsensitive(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 
-	lowercaseResponse, err := client.Search(ctx, &boardgamegeek.SearchRequest{Query: "catan"})
+	lowercaseResponse, err := client.Search(ctx, &boardgamegeek.SearchOptions{Query: "catan"})
 	assert.NoError(t, err)
 
-	uppercaseResponse, err := client.Search(ctx, &boardgamegeek.SearchRequest{Query: "CATAN"})
+	uppercaseResponse, err := client.Search(ctx, &boardgamegeek.SearchOptions{Query: "CATAN"})
 	assert.NoError(t, err)
 
 	assert.Equal(t, lowercaseResponse.Total, uppercaseResponse.Total)
@@ -115,7 +115,7 @@ func TestSearchIsCaseInsensitive(t *testing.T) {
 func TestSearchWithSpecialCharactersInQuery(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "Sid Meier's Civilization",
 		Exact: true,
 	}
@@ -123,13 +123,13 @@ func TestSearchWithSpecialCharactersInQuery(t *testing.T) {
 	response, err := client.Search(ctx, searchRequest)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(response.Items))
-	assert.Equal(t, int64(69188), response.Items[0].Id)
+	assert.Equal(t, int64(69188), response.Items[0].ID)
 }
 
 func TestSearchByExactWithNoMatch(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
-	searchRequest := &boardgamegeek.SearchRequest{
+	searchRequest := &boardgamegeek.SearchOptions{
 		// A partial, non-exact name for Catan; exact matching should find nothing.
 		Query: "catan the game that does not exist",
 		Exact: true,
