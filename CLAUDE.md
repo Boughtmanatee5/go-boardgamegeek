@@ -14,6 +14,9 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 1. https://boardgamegeek.com/wiki/page/BGG_XML_API2 is the source of truth for boardgamegeek xmlapi2 don't invent fields; check them against a real response.
 2. client.go contains the main struct Client.
     - Client contains all the methods that make requests to boardgamegeek
+    - Every endpoint method goes through the unexported `Client.get(ctx, path, query, v)`, which builds and sends the request, checks the status and unmarshals the xml.
+      `get` turns BGG's quirky responses into unexported errors: `errAccepted` (202), `errNotXML`, `*apiError` and `*collectionErrors`.
+      Endpoint methods map these to their own messages with `errors.Is`/`errors.As`
 3. Each boardgamegeek entity has its own file. E.g. search.go, thing.go and family_item.go contain definitions for the SearchItem, Thing and FamilyItem entities
     - forum.go covers both `/forumlist` (ForumListRequest/ForumListResponse) and `/forum` (ForumRequest/ForumResponse); thread.go covers `/thread`
     - hot.go, user.go, guild.go and collection.go cover `/hot`, `/user`, `/guild` and `/collection`
@@ -34,7 +37,7 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 1. Create a file for the new endpoint
 2. Define XxxRequest struct and a toQuerString method
 3. Add response structs with `xml` tags taken from the API wiki. Optional sections are pointers so they come back nil when absent.
-4. Add a `Client` method that wraps errors with `%w` and checks the response status code
+4. Add a `Client` method that calls `bggClient.get` and maps any endpoint-specific "not found" error
 5. Add tests under `integration_test/`
 6. Update `features.json`
 
@@ -43,6 +46,9 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 2. All integration tests pass without errors
 3. The feature appears in `feature.json` with status `"done"` and evidence (time stamp the test command was run).
 4. The Architecture section of this document is updated to reflect any changes in architecture
+
+## Refactor
+`docs/refactor_plan.md` describes a phased refactor toward go-github/stripe-go conventions. Track phase status in `refactor_phases.json` using the same Definition of Done.
 
 ## Session Handoff
 

@@ -233,3 +233,7 @@ type collectionErrors struct {
 	XMLName  xml.Name `xml:"errors"`
 	Messages []string `xml:"error>message"`
 }
+
+func (e *collectionErrors) Error() string {
+	return strings.Join(e.Messages, "; ")
+}
