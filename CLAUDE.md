@@ -15,6 +15,8 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 2. client.go contains the main struct Client.
     - Client contains all the methods that make requests to boardgamegeek
 3. Each boardgamegeek entity has its own file. E.g. search.go, thing.go and family_item.go contain definitions for the SearchItem, Thing and FamilyItem entities
+    - forum.go covers both `/forumlist` (ForumListRequest/ForumListResponse) and `/forum` (ForumRequest/ForumResponse); thread.go covers `/thread`
+    - BGG often signals "not found" with HTTP 200: `/forum` returns an HTML page (GetForum checks the Content-Type) and `/thread` returns an `<error>` document (GetThread checks the root element)
 4. Integration tests for each boardgamegeek api endpoint are written in integration_test
     - `integration_test/main_test.go` reads the BGG bearer token from the `BGG_API_TOKEN` env var in `TestMain` and fails fast if it is unset; build clients with `newTestClient()`
     - Run with `BGG_API_TOKEN=<token> go test ./integration_test/...`
