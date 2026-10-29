@@ -1,7 +1,8 @@
+//go:build integration
+
 package integration_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/Boughtmanatee5/go-boardgamegeek"
@@ -14,20 +15,10 @@ const seventhContinentID int64 = 180263
 
 const collectionRetries = 10
 
-// getCollection retries while BGG queues the request, as callers of GetCollection are expected to.
-// The test client's transport spaces out the retries.
+// getCollection lets the client retry while BGG queues the request (HTTP 202), which exercises WithMaxRetries
 func getCollection(t *testing.T, request *boardgamegeek.CollectionOptions) (*boardgamegeek.CollectionResponse, error) {
 	t.Helper()
-	client := newTestClient()
-
-	for range collectionRetries {
-		response, err := client.GetCollection(t.Context(), request)
-		if !errors.Is(err, boardgamegeek.ErrCollectionNotReady) {
-			return response, err
-		}
-	}
-	t.Fatalf("collection for %s still queued after %d attempts", request.Username, collectionRetries)
-	return nil, nil
+	return newTestClient(boardgamegeek.WithMaxRetries(collectionRetries)).GetCollection(t.Context(), request)
 }
 
 func TestGetCollectionByID(t *testing.T) {

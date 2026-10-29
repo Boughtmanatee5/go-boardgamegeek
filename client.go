@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/google/go-querystring/query"
 )
@@ -16,13 +17,19 @@ import (
 const (
 	defaultBaseURL   = "https://boardgamegeek.com/xmlapi2/"
 	defaultUserAgent = "go-boardgamegeek"
+	defaultRetryWait = 2 * time.Second
+	maxRetryWait     = time.Minute
 )
 
+// Client makes requests to the BGG xmlapi2. Build one with NewClient.
 type Client struct {
 	httpClient *http.Client
 	token      string
 	baseURL    *url.URL
 	userAgent  string
+	maxRetries int
+	// retryWait is the first backoff delay, doubled on each retry
+	retryWait time.Duration
 }
 
 // ClientOption configures a Client in NewClient
@@ -57,6 +64,15 @@ func WithUserAgent(userAgent string) ClientOption {
 	}
 }
 
+// WithMaxRetries retries a request up to maxRetries times when BGG responds with 202 (request queued)
+// or 429 (rate limited). It waits for Retry-After when BGG sends it, and otherwise backs off
+// exponentially from 2s up to a minute. The default is 0: no retries.
+func WithMaxRetries(maxRetries int) ClientOption {
+	return func(c *Client) {
+		c.maxRetries = maxRetries
+	}
+}
+
 // NewClient returns a Client for the BGG xmlapi2, configured by options
 func NewClient(options ...ClientOption) *Client {
 	baseURL, _ := url.Parse(defaultBaseURL)
@@ -65,6 +81,7 @@ func NewClient(options ...ClientOption) *Client {
 		httpClient: &http.Client{},
 		baseURL:    baseURL,
 		userAgent:  defaultUserAgent,
+		retryWait:  defaultRetryWait,
 	}
 	for _, option := range options {
 		option(c)
@@ -74,9 +91,7 @@ func NewClient(options ...ClientOption) *Client {
 }
 
 // get requests path with opts, a request struct encoded by its `url` tags, and unmarshals the xml body into v.
-// It returns *AcceptedError for 202, *RateLimitError for 429 and *ErrorResponse for any other
-// non-200 status or for a 200 <error>/<errors> document or non-xml body. 404s and <error>
-// documents match ErrNotFound; endpoints mark their own not-found quirks with markNotFound.
+// It retries 202s and 429s as configured by WithMaxRetries.
 func (c *Client) get(ctx context.Context, path string, opts any, v any) error {
 	params, encodeErr := query.Values(opts)
 	if encodeErr != nil {
@@ -86,9 +101,55 @@ func (c *Client) get(ctx context.Context, path string, opts any, v any) error {
 	reqURL := c.baseURL.JoinPath(path)
 	reqURL.RawQuery = params.Encode()
 
+	for attempt := 0; ; attempt++ {
+		err := c.do(ctx, reqURL, v)
+		wait, retry := c.retryDelay(err, attempt)
+		if !retry {
+			return err
+		}
+
+		timer := time.NewTimer(wait)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
+
+// retryDelay reports whether a request that failed with err on attempt should be retried, and after how long
+func (c *Client) retryDelay(err error, attempt int) (time.Duration, bool) {
+	if attempt >= c.maxRetries {
+		return 0, false
+	}
+
+	backoff := min(c.retryWait<<attempt, maxRetryWait)
+
+	var rateLimitErr *RateLimitError
+	if errors.As(err, &rateLimitErr) {
+		if rateLimitErr.RetryAfter > 0 {
+			return rateLimitErr.RetryAfter, true
+		}
+		return backoff, true
+	}
+
+	var acceptedErr *AcceptedError
+	if errors.As(err, &acceptedErr) {
+		return backoff, true
+	}
+
+	return 0, false
+}
+
+// do sends one request for reqURL and unmarshals the xml body into v.
+// It returns *AcceptedError for 202, *RateLimitError for 429 and *ErrorResponse for any other
+// non-200 status or for a 200 <error>/<errors> document or non-xml body. 404s and <error>
+// documents match ErrNotFound; endpoints mark their own not-found quirks with markNotFound.
+func (c *Client) do(ctx context.Context, reqURL *url.URL, v any) error {
 	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
 	if reqErr != nil {
-		return fmt.Errorf("error creating %s request %w", path, reqErr)
+		return fmt.Errorf("error creating %s request %w", reqURL.Path, reqErr)
 	}
 
 	if c.userAgent != "" {
@@ -149,6 +210,7 @@ func markNotFound(err error, notFound func(*ErrorResponse) bool) error {
 	return err
 }
 
+// Search searches for items by name (/search)
 func (c *Client) Search(ctx context.Context, opts *SearchOptions) (*SearchResponse, error) {
 	var searchResponse SearchResponse
 	if err := c.get(ctx, "/search", opts, &searchResponse); err != nil {
@@ -157,6 +219,7 @@ func (c *Client) Search(ctx context.Context, opts *SearchOptions) (*SearchRespon
 	return &searchResponse, nil
 }
 
+// GetThings returns one or more things such as board games, expansions or RPG items (/thing)
 func (c *Client) GetThings(ctx context.Context, opts *ThingsOptions) (*ThingsResponse, error) {
 	var getThingsResponse ThingsResponse
 	if err := c.get(ctx, "/thing", opts, &getThingsResponse); err != nil {
@@ -165,6 +228,7 @@ func (c *Client) GetThings(ctx context.Context, opts *ThingsOptions) (*ThingsRes
 	return &getThingsResponse, nil
 }
 
+// GetFamilyItems returns families, groups of related things such as a game series (/family)
 func (c *Client) GetFamilyItems(ctx context.Context, opts *FamilyItemsOptions) (*FamilyItemsResponse, error) {
 	var familyItemsResponse FamilyItemsResponse
 	if err := c.get(ctx, "/family", opts, &familyItemsResponse); err != nil {
@@ -173,6 +237,7 @@ func (c *Client) GetFamilyItems(ctx context.Context, opts *FamilyItemsOptions) (
 	return &familyItemsResponse, nil
 }
 
+// GetForumList returns the forums of a thing or family (/forumlist)
 func (c *Client) GetForumList(ctx context.Context, opts *ForumListOptions) (*ForumListResponse, error) {
 	var forumListResponse ForumListResponse
 	if err := c.get(ctx, "/forumlist", opts, &forumListResponse); err != nil {
@@ -203,6 +268,7 @@ func (c *Client) GetThread(ctx context.Context, opts *ThreadOptions) (*ThreadRes
 	return &threadResponse, nil
 }
 
+// GetHotItems returns the current hotness list, 50 items of one type (/hot)
 func (c *Client) GetHotItems(ctx context.Context, opts *HotItemsOptions) (*HotItemsResponse, error) {
 	var hotItemsResponse HotItemsResponse
 	if err := c.get(ctx, "/hot", opts, &hotItemsResponse); err != nil {

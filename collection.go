@@ -14,6 +14,7 @@ func Bool(b bool) *bool {
 	return &b
 }
 
+// CollectionOptions are the parameters for GetCollection
 type CollectionOptions struct {
 	// Username is required
 	Username       string    `url:"username"`
@@ -62,6 +63,7 @@ type CollectionName struct {
 	Value     string   `xml:",chardata"`
 }
 
+// CollectionStatus holds a collection item's status flags, such as own and wishlist
 type CollectionStatus struct {
 	XMLName          xml.Name `xml:"status"`
 	Own              bool     `xml:"own,attr"`
@@ -76,6 +78,7 @@ type CollectionStatus struct {
 	LastModified     string   `xml:"lastmodified,attr"`
 }
 
+// CollectionRank is one of a collection item's BGG ranks, overall or within a category
 type CollectionRank struct {
 	XMLName      xml.Name `xml:"rank"`
 	Type         string   `xml:"type,attr"`
@@ -87,6 +90,7 @@ type CollectionRank struct {
 	BayesAverage string `xml:"bayesaverage,attr"`
 }
 
+// CollectionRating holds a collection item's rating statistics, returned with CollectionOptions.Stats
 type CollectionRating struct {
 	XMLName xml.Name `xml:"rating"`
 	// Value is the user's rating, "N/A" when unrated
@@ -99,6 +103,7 @@ type CollectionRating struct {
 	Ranks        []*CollectionRank `xml:"ranks>rank"`
 }
 
+// CollectionStats holds a collection item's player count, playtime and rating statistics
 type CollectionStats struct {
 	XMLName     xml.Name          `xml:"stats"`
 	MinPlayers  int               `xml:"minplayers,attr"`
@@ -110,6 +115,7 @@ type CollectionStats struct {
 	Rating      *CollectionRating `xml:"rating"`
 }
 
+// CollectionItem is one thing in a user's collection
 type CollectionItem struct {
 	XMLName         xml.Name          `xml:"item"`
 	ObjectType      string            `xml:"objecttype,attr"`
@@ -130,6 +136,7 @@ type CollectionItem struct {
 	ConditionText   string            `xml:"conditiontext"`
 }
 
+// CollectionResponse is the response from GetCollection
 type CollectionResponse struct {
 	XMLName    xml.Name          `xml:"items"`
 	TotalItems int               `xml:"totalitems,attr"`

@@ -4,13 +4,16 @@ import (
 	"encoding/xml"
 )
 
+// GuildMemberSort orders the members GetGuild returns
 type GuildMemberSort string
 
+// Sort orders accepted by GuildOptions.Sort
 const (
 	GuildMemberSortUsername GuildMemberSort = "username"
 	GuildMemberSortDate     GuildMemberSort = "date"
 )
 
+// GuildOptions are the parameters for GetGuild and AllGuildMembers
 type GuildOptions struct {
 	ID      int64 `url:"id"`
 	Members bool  `url:"members,int,omitempty"`
@@ -20,6 +23,7 @@ type GuildOptions struct {
 	Page int `url:"page,omitempty"`
 }
 
+// GuildLocation is a guild's address
 type GuildLocation struct {
 	XMLName         xml.Name `xml:"location"`
 	Addr1           string   `xml:"addr1"`
@@ -30,12 +34,14 @@ type GuildLocation struct {
 	Country         string   `xml:"country"`
 }
 
+// GuildMember is one member of a guild
 type GuildMember struct {
 	XMLName xml.Name `xml:"member"`
 	Name    string   `xml:"name,attr"`
 	Date    string   `xml:"date,attr"`
 }
 
+// GuildMembers is one page of a guild's members, returned with GuildOptions.Members
 type GuildMembers struct {
 	XMLName xml.Name       `xml:"members"`
 	Count   int            `xml:"count,attr"`
@@ -43,6 +49,7 @@ type GuildMembers struct {
 	Members []*GuildMember `xml:"member"`
 }
 
+// GuildResponse is the response from GetGuild
 type GuildResponse struct {
 	XMLName     xml.Name       `xml:"guild"`
 	ID          int64          `xml:"id,attr"`

@@ -1,3 +1,15 @@
 version: "2"
+run:
+  # lint the integration tests, which only build with -tags integration
+  build-tags:
+    - integration
 linters:
   default: standard
+  enable:
+    - revive
+  settings:
+    revive:
+      rules:
+        # every exported identifier and the package need a doc comment
+        - name: exported
+        - name: package-comments

@@ -1,3 +1,5 @@
+//go:build integration
+
 package integration_test
 
 import (
@@ -58,9 +60,10 @@ func (t *throttledTransport) RoundTrip(req *http.Request) (*http.Response, error
 // testHTTPClient is shared by every test client so the throttle applies across the whole suite
 var testHTTPClient = &http.Client{Transport: &throttledTransport{}}
 
-func newTestClient() *boardgamegeek.Client {
-	return boardgamegeek.NewClient(
+// newTestClient returns an authenticated, throttled client with any extra options applied
+func newTestClient(options ...boardgamegeek.ClientOption) *boardgamegeek.Client {
+	return boardgamegeek.NewClient(append([]boardgamegeek.ClientOption{
 		boardgamegeek.WithHTTPClient(testHTTPClient),
 		boardgamegeek.WithAuthToken(bggToken),
-	)
+	}, options...)...)
 }

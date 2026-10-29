@@ -38,5 +38,9 @@
     "forum": {
         "status": "done",
         "evidence": "2026-10-29T15:56:48Z go test ./integration_test/... -count=1: 46/46 passed (5 forum tests); golangci-lint run: 0 issues"
+    },
+    "plays": {
+        "status": "incomplete",
+        "evidence": ""
     }
 }

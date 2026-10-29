@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 )
 
+// ThreadOptions are the parameters for GetThread
 type ThreadOptions struct {
 	ID           int64 `url:"id"`
 	MinArticleID int64 `url:"minarticleid,omitempty"`
@@ -12,6 +13,7 @@ type ThreadOptions struct {
 	Count          int    `url:"count,omitempty"`
 }
 
+// Article is one post in a thread
 type Article struct {
 	XMLName  xml.Name `xml:"article"`
 	ID       int64    `xml:"id,attr"`
@@ -24,6 +26,7 @@ type Article struct {
 	Body     string   `xml:"body"`
 }
 
+// ThreadResponse is the response from GetThread
 type ThreadResponse struct {
 	XMLName     xml.Name   `xml:"thread"`
 	ID          int64      `xml:"id,attr"`

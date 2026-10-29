@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?><guild id="1" name="Dallas Metrogamers" created="Thu, 14 Jun 2007 00:03:58 +0000" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+	<category>group</category>
+	<website></website>
+	<manager>Aldie</manager>
+	<description>This is a guild for the Dallas Metrogamers.</description>
+	<location>
+		<addr1></addr1>
+		<addr2></addr2>
+		<city>Dallas</city>
+		<stateorprovince>Texas</stateorprovince>
+		<postalcode>75218</postalcode>
+		<country>United States</country>
+	</location>
+		<members count="29" page="1">
+					<member name="Aldie" date="Thu, 14 Jun 2007 00:03:58 +0000" />
+					<member name="andrews777" date="Thu, 20 Dec 2007 23:54:24 +0000" />
+					<member name="apacolypse" date="Fri, 22 Jan 2010 20:06:42 +0000" />
+					<member name="CaptainQwyx" date="Fri, 13 Jul 2007 13:49:25 +0000" />
+					<member name="chezzilla" date="Wed, 18 Feb 2009 13:59:50 +0000" />
+					<member name="ChipChuck" date="Mon, 28 Apr 2008 15:48:07 +0000" />
+					<member name="Deguello" date="Tue, 19 Dec 2017 16:10:37 +0000" />
+					<member name="deitied" date="Mon, 08 Sep 2008 18:47:23 +0000" />
+					<member name="dietevil" date="Thu, 14 Jun 2007 14:01:15 +0000" />
+					<member name="diplomacyworld" date="Sun, 03 Aug 2008 17:55:55 +0000" />
+					<member name="ecouch" date="Tue, 19 Aug 2008 20:00:32 +0000" />
+					<member name="gambit3113" date="Tue, 31 Mar 2009 20:00:42 +0000" />
+					<member name="gamesnight" date="Mon, 18 Jun 2007 21:53:04 +0000" />
+					<member name="great_destroyer85" date="Thu, 03 Mar 2016 16:47:07 +0000" />
+					<member name="gteemer" date="Wed, 01 Aug 2007 18:09:15 +0000" />
+					<member name="Jeff" date="Thu, 14 Jun 2007 02:28:37 +0000" />
+					<member name="jmellby" date="Tue, 12 Feb 2008 22:38:28 +0000" />
+					<member name="loiosh13" date="Mon, 12 Jan 2009 04:57:50 +0000" />
+					<member name="molitor4" date="Thu, 14 Jun 2007 01:44:04 +0000" />
+					<member name="moosemcd" date="Tue, 31 Mar 2015 18:23:47 +0000" />
+					<member name="MrFixit" date="Mon, 23 May 2022 21:37:38 +0000" />
+					<member name="Redward" date="Sat, 18 Oct 2014 13:00:54 +0000" />
+					<member name="rshipp" date="Thu, 14 Jun 2007 07:58:56 +0000" />
+					<member name="ShaneHamlin" date="Wed, 24 Mar 2010 12:58:31 +0000" />
+					<member name="stephenstover" date="Wed, 10 Mar 2021 21:04:24 +0000" />
+			</members>
+	</guild>

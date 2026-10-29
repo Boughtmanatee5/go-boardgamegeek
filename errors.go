@@ -28,6 +28,7 @@ func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("%s %s: %d %s", e.Response.Request.Method, e.Response.Request.URL, e.Response.StatusCode, e.Message)
 }
 
+// Is reports whether target is ErrNotFound and the response means the entity does not exist
 func (e *ErrorResponse) Is(target error) bool {
 	return target == ErrNotFound && e.notFound
 }

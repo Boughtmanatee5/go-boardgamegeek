@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<items totalitems="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse" pubdate="Thu, 29 Oct 2026 16:16:17 +0000">
+		<item objecttype="thing" objectid="180263" subtype="boardgame" collid="45876480">
+	<name sortindex="5">The 7th Continent</name>
+		<yearpublished>2017</yearpublished>			<image>https://cf.geekdo-images.com/OYne8uBCHv5oEgRfpOrV0A__original/img/jcTlhpYG2496xQtuQ277bFTIldY=/0x0/filters:format(jpeg)/pic2648303.jpg</image>
+		<thumbnail>https://cf.geekdo-images.com/OYne8uBCHv5oEgRfpOrV0A__small/img/_YPdmxegKIoZI_ButuMJzfw9UBo=/fit-in/200x150/filters:strip_icc()/pic2648303.jpg</thumbnail>
+		<stats minplayers="1"																	maxplayers="4"																	minplaytime="5"																	maxplaytime="1000"																	playingtime="1000"																	numowned="38964" >
+				<rating value="10">			<usersrated value="23306" />			<average value="7.71516" />
+			<bayesaverage value="7.40339" />			<stddev value="1.71622" />
+			<median value="0" />			<ranks>
+												<rank type="subtype" id="1" name="boardgame" friendlyname="Board Game Rank" value="174" bayesaverage="7.40339" />
+																<rank type="family" id="5496" name="thematic" friendlyname="Thematic Rank" value="51" bayesaverage="7.44451" />
+											</ranks>		</rating>
+			</stats>	<status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0" wishlist="0"  preordered="0" lastmodified="2024-10-01 16:31:14" />
+	<numplays>1</numplays>			<comment>Played this for 40 hours in a week&#039;s time and absolutely loved it.  Slowed down on my enthusiasm with the expansions.  Looking forward to the next one.</comment>				</item>
+		
+</items>

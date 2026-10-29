@@ -20,7 +20,7 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 2. client.go contains the main struct Client.
     - Client contains all the methods that make requests to boardgamegeek
     - Build clients with functional options: `NewClient(opts ...ClientOption)`, e.g. `NewClient(WithAuthToken(token))`.
-      Options are `WithAuthToken` (sends `Authorization: Bearer <token>`), `WithHTTPClient`, `WithBaseURL` and `WithUserAgent`; Client fields stay unexported.
+      Options are `WithAuthToken` (sends `Authorization: Bearer <token>`), `WithHTTPClient`, `WithBaseURL`, `WithUserAgent` and `WithMaxRetries`; Client fields stay unexported.
       New client settings get a `WithXxx` option rather than an exported field
     - Every endpoint method goes through the unexported `Client.get(ctx, path, opts, v)`, which encodes the request struct with `github.com/google/go-querystring`, sends it, checks the status and unmarshals the xml.
       `get` returns the public error types in errors.go: `*AcceptedError` (202), `*RateLimitError` (429, with `RetryAfter`) and `*ErrorResponse`.
@@ -28,6 +28,12 @@ The goal is to build clean go structs and interfaces to simplify making API requ
       Endpoint methods wrap errors with context (`fmt.Errorf("thread %d: %w", ...)`) so `errors.Is`/`errors.As` still work
     - `ErrNotFound` matches every not-found shape through `ErrorResponse.Is`. `get` marks 404s and `<error>` documents.
       Endpoints mark their own quirks with `markNotFound`, so an unrelated html page or validation error is not reported as not found
+    - `get` encodes the query and loops over `do`, which sends a single request. With `WithMaxRetries(n)`, a 202 or 429 is retried up to n times.
+      The wait is `Retry-After` when sent, else backoff from 2s (`retryWait`) doubling to 1 minute, and the wait stops when ctx is done. The default is no retries
+    - pagination.go holds the generic `paginate` helper and the `AllXxx` iterators (`AllForumThreads`, `AllGuildMembers`, `AllUserBuddies`, `AllUserGuilds`, `AllThingComments`), which return `iter.Seq2[*T, error]`.
+      `paginate` stops on an empty or short page, on reaching BGG's reported total, or on the first error. Each page copies opts, so the caller's options are never mutated.
+      There is no shared `ListOptions`: only `/thing` accepts `pagesize`, so each options struct keeps its own `Page`
+    - doc.go is the package overview. Every exported identifier needs a doc comment (enforced by revive's `exported` rule in .golangci.yml)
 3. Each boardgamegeek entity has its own file. E.g. search.go, thing.go and family_item.go contain definitions for the SearchItem, Thing and FamilyItem entities
     - forum.go covers both `/forumlist` (ForumListOptions/ForumListResponse) and `/forum` (ForumOptions/ForumResponse); thread.go covers `/thread`
     - hot.go, user.go, guild.go and collection.go cover `/hot`, `/user`, `/guild` and `/collection`
@@ -37,12 +43,19 @@ The goal is to build clean go structs and interfaces to simplify making API requ
         - `/thread` and `/guild` return `<error message="..."/>`, parsed by the shared `apiError` in errors.go
         - `/collection` returns `<errors><error><message>`, parsed by `collectionErrors`. GetCollection marks "Invalid username specified" as not found
         - `/user` is the exception: an unknown name is a 404
-    - `/collection` returns HTTP 202 while BGG builds the collection. GetCollection returns an `*AcceptedError` that matches `ErrCollectionNotReady`, and leaves retrying to the caller
+    - `/collection` returns HTTP 202 while BGG builds the collection. GetCollection returns an `*AcceptedError` that matches `ErrCollectionNotReady`; callers retry themselves or set `WithMaxRetries`
     - Collection status filters are `*bool` (nil = no filter, true = include, false = exclude); build them with `boardgamegeek.Bool`. Tagged `int,omitempty`, go-querystring omits nil and sends 1/0
-4. Integration tests for each boardgamegeek api endpoint are written in integration_test
-    - Offline unit tests live in the root package (`go test .`). query_test.go checks each request struct's encoded query string. errors_test.go stubs BGG with `httptest` through `WithBaseURL`, for paths BGG can't produce on demand, such as 429
-    - `integration_test/main_test.go` reads the BGG bearer token from the `BGG_API_TOKEN` env var in `TestMain` and fails fast if it is unset; build clients with `newTestClient()`
-    - Run with `BGG_API_TOKEN=<token> go test ./integration_test/...`
+4. Tests
+    - Offline unit tests live in the root package and run with `go test ./...` (no token needed):
+        - endpoints_test.go parses real BGG responses saved in `testdata/<endpoint>.xml` (each test notes the request it was captured with). Re-capture a fixture when a response struct changes
+        - query_test.go checks each options struct's encoded query string
+        - errors_test.go and retry_test.go stub BGG with `httptest` through `WithBaseURL`, for paths BGG can't produce on demand, such as 429
+        - pagination_test.go covers `paginate`'s stop conditions
+        - example_test.go holds godoc examples. They call the live API, so they have no `// Output:` and are compiled, not run
+    - Integration tests for each boardgamegeek api endpoint are written in integration_test, behind the `//go:build integration` tag. .golangci.yml sets that build tag so they are still linted
+    - `integration_test/main_test.go` reads the BGG bearer token from the `BGG_API_TOKEN` env var in `TestMain` and fails fast if it is unset; build clients with `newTestClient(opts...)`, which takes extra client options
+    - Run with `BGG_API_TOKEN=<token> go test -tags integration ./integration_test/...`
+    - Collection tests use `WithMaxRetries` to wait out BGG's 202s, which exercises the retry path live
     - `newTestClient()` shares one `http.Client` whose `throttledTransport` spaces every request 2s apart (5s for `/collection`, which is limited more tightly) to stay under BGG's rate limit (429 after ~40 requests in a burst)
 
 ## Adding a new boardgamegeek XMLAPI2 endpoint
@@ -50,12 +63,12 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 2. Define an XxxOptions struct with `url:"..."` tags for every field (go-querystring): `comma` for lists, `int,omitempty` for flags BGG takes as 1/0, `omitempty` for optional params. Add the expected encoding to query_test.go
 3. Add response structs with `xml` tags taken from the API wiki. Optional sections are pointers so they come back nil when absent.
 4. Add a `Client` method (receiver `c`, parameter `opts *XxxOptions`) that calls `c.get` and maps any endpoint-specific "not found" error
-5. Add tests under `integration_test/`
+5. Capture a real response into `testdata/<endpoint>.xml` and add a parsing test to endpoints_test.go. Add integration tests under `integration_test/` (with the `integration` build tag). Add an `AllXxx` iterator in pagination.go if the endpoint is paged
 6. Update `features.json`
 
 ## Definition of Done
 1. `golangci-lint run` passes with no errors
-2. All unit tests (`go test .`) and integration tests pass without errors
+2. All unit tests (`go test ./...`) and integration tests (`go test -tags integration ./integration_test/...`) pass without errors
 3. The feature appears in `feature.json` with status `"done"` and evidence (time stamp the test command was run).
 4. The Architecture section of this document is updated to reflect any changes in architecture
 

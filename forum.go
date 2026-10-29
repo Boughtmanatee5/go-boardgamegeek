@@ -4,18 +4,22 @@ import (
 	"encoding/xml"
 )
 
+// ForumListType is the kind of entity whose forums GetForumList returns
 type ForumListType string
 
+// Entity types accepted by ForumListOptions.Type
 const (
 	ForumListTypeThing  ForumListType = "thing"
 	ForumListTypeFamily ForumListType = "family"
 )
 
+// ForumListOptions are the parameters for GetForumList
 type ForumListOptions struct {
 	ID   int64         `url:"id"`
 	Type ForumListType `url:"type"`
 }
 
+// ForumSummary describes one forum in a ForumListResponse
 type ForumSummary struct {
 	XMLName      xml.Name `xml:"forum"`
 	ID           int64    `xml:"id,attr"`
@@ -28,6 +32,7 @@ type ForumSummary struct {
 	LastPostDate string   `xml:"lastpostdate,attr"`
 }
 
+// ForumListResponse is the response from GetForumList
 type ForumListResponse struct {
 	XMLName    xml.Name        `xml:"forums"`
 	Type       string          `xml:"type,attr"`
@@ -36,11 +41,13 @@ type ForumListResponse struct {
 	Forums     []*ForumSummary `xml:"forum"`
 }
 
+// ForumOptions are the parameters for GetForum and AllForumThreads
 type ForumOptions struct {
 	ID   int64 `url:"id"`
 	Page int   `url:"page,omitempty"`
 }
 
+// ThreadSummary describes one thread in a forum; use GetThread for its articles
 type ThreadSummary struct {
 	XMLName      xml.Name `xml:"thread"`
 	ID           int64    `xml:"id,attr"`
@@ -51,6 +58,7 @@ type ThreadSummary struct {
 	LastPostDate string   `xml:"lastpostdate,attr"`
 }
 
+// ForumResponse is the response from GetForum, one page of a forum's threads
 type ForumResponse struct {
 	XMLName    xml.Name `xml:"forum"`
 	ID         int64    `xml:"id,attr"`

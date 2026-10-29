@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 )
 
+// SearchOptions are the parameters for Search
 type SearchOptions struct {
 	Query string      `url:"query"`
 	Types []ThingType `url:"type,comma,omitempty"`
@@ -14,6 +15,7 @@ type SearchOptions struct {
 // to the attribute's value. Use *ValueAttr for optional elements so they are nil when absent.
 type ValueAttr string
 
+// UnmarshalXML implements xml.Unmarshaler by reading the element's value attribute
 func (v *ValueAttr) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for _, attr := range start.Attr {
 		if attr.Name.Local == "value" {
@@ -23,6 +25,7 @@ func (v *ValueAttr) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return d.Skip()
 }
 
+// Name is one of an item's names; Type is "primary" or "alternate"
 type Name struct {
 	XMLName   xml.Name `xml:"name"`
 	Type      string   `xml:"type,attr"`
@@ -30,6 +33,7 @@ type Name struct {
 	Value     string   `xml:"value,attr"`
 }
 
+// SearchItem is one match in a SearchResponse
 type SearchItem struct {
 	XMLName       xml.Name   `xml:"item"`
 	Text          string     `xml:",chardata"`
@@ -39,6 +43,7 @@ type SearchItem struct {
 	YearPublished *ValueAttr `xml:"yearpublished"`
 }
 
+// SearchResponse is the response from Search
 type SearchResponse struct {
 	XMLName xml.Name      `xml:"items"`
 	Total   int64         `xml:"total,attr"`

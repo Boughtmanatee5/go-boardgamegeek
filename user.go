@@ -4,14 +4,17 @@ import (
 	"encoding/xml"
 )
 
+// UserDomain selects which hot and top lists GetUser returns
 type UserDomain string
 
+// Domains accepted by UserOptions.Domain
 const (
 	UserDomainBoardGame UserDomain = "boardgame"
 	UserDomainRPG       UserDomain = "rpg"
 	UserDomainVideoGame UserDomain = "videogame"
 )
 
+// UserOptions are the parameters for GetUser, AllUserBuddies and AllUserGuilds
 type UserOptions struct {
 	Name    string `url:"name"`
 	Buddies bool   `url:"buddies,int,omitempty"`
@@ -24,12 +27,14 @@ type UserOptions struct {
 	Page int `url:"page,omitempty"`
 }
 
+// UserBuddy is one of a user's buddies
 type UserBuddy struct {
 	XMLName xml.Name `xml:"buddy"`
 	ID      int64    `xml:"id,attr"`
 	Name    string   `xml:"name,attr"`
 }
 
+// UserBuddies is one page of a user's buddies, returned with UserOptions.Buddies
 type UserBuddies struct {
 	XMLName xml.Name     `xml:"buddies"`
 	Total   int          `xml:"total,attr"`
@@ -37,12 +42,14 @@ type UserBuddies struct {
 	Buddies []*UserBuddy `xml:"buddy"`
 }
 
+// UserGuild is one guild a user belongs to
 type UserGuild struct {
 	XMLName xml.Name `xml:"guild"`
 	ID      int64    `xml:"id,attr"`
 	Name    string   `xml:"name,attr"`
 }
 
+// UserGuilds is one page of a user's guilds, returned with UserOptions.Guilds
 type UserGuilds struct {
 	XMLName xml.Name     `xml:"guilds"`
 	Total   int          `xml:"total,attr"`
@@ -50,6 +57,7 @@ type UserGuilds struct {
 	Guilds  []*UserGuild `xml:"guild"`
 }
 
+// UserRankedItem is one entry in a user's hot or top list
 type UserRankedItem struct {
 	XMLName xml.Name `xml:"item"`
 	Rank    int      `xml:"rank,attr"`
@@ -64,6 +72,7 @@ type UserRankedItems struct {
 	Items  []*UserRankedItem `xml:"item"`
 }
 
+// UserResponse is the response from GetUser
 type UserResponse struct {
 	XMLName          xml.Name         `xml:"user"`
 	ID               int64            `xml:"id,attr"`

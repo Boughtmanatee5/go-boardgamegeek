@@ -65,14 +65,16 @@ Phases 1, 3 and 4 kept the public API; Phase 2 changed `NewClient`. The remainin
 - Fix the module path/package name mismatch. Decision (2026-10-29): rename the repo and module to `github.com/Boughtmanatee5/go-boardgamegeek`, keeping package `boardgamegeek` (the go-github convention).
 
 ### Phase 6: Pagination and retries
-- Embed a shared `ListOptions{Page, PageSize}`.
-- Add `iter.Seq2[*T, error]` iterators for the paged lists (thing comments, forum threads, guild members, user buddies).
-- Add opt-in retries for 202/429 with backoff, configured on `Client`.
+- ~~Embed a shared `ListOptions{Page, PageSize}`.~~ Dropped: only `/thing` accepts `pagesize`. A shared struct would add a field
+  BGG ignores to the forum, guild and user options, so each options struct keeps its own `Page`.
+- Add `iter.Seq2[*T, error]` iterators for the paged lists: `AllForumThreads`, `AllGuildMembers`, `AllUserBuddies`, `AllUserGuilds`
+  and `AllThingComments` (pagination.go).
+- Add opt-in retries for 202/429 with backoff, configured with the `WithMaxRetries` option.
 
 ### Phase 7: Tests and docs
 - Add unit tests in the root package against `httptest.NewServer`, with real BGG responses saved in `testdata/*.xml`.
 - Put `integration_test/` behind a `//go:build integration` tag.
-- Add `doc.go`, godoc on exported identifiers, `example_test.go` and a real README.
+- Add `doc.go`, godoc on exported identifiers (enforced with revive's `exported` rule), `example_test.go` and a real README.
 
 ## Per-Phase Definition of Done
 Same as `CLAUDE.md`:

@@ -20,11 +20,11 @@
         "evidence": "2026-10-29T19:42:44Z go test ./integration_test/... -count=1: 73/73 passed (183.4s); go test . -count=1: passed; golangci-lint run: 0 issues"
     },
     "phase_6_pagination_and_retries": {
-        "status": "todo",
-        "evidence": ""
+        "status": "done",
+        "evidence": "2026-10-29T20:03:52Z go test -tags integration ./integration_test/... -count=1: 78/78 passed (210.3s; 5 new iterator tests, collection tests use WithMaxRetries); go test ./... -count=1: 31 tests passed; golangci-lint run: 0 issues"
     },
     "phase_7_tests_and_docs": {
-        "status": "todo",
-        "evidence": ""
+        "status": "done",
+        "evidence": "2026-10-29T20:03:52Z go test ./... -count=1: 31 tests passed offline (10 fixture, 13-case query, 6 error, 7 retry, 7 pagination); go test -tags integration ./integration_test/... -count=1: 78/78 passed; golangci-lint run (with revive exported): 0 issues"
     }
 }
