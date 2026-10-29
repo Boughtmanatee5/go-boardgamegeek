@@ -1,0 +1,129 @@
+package integration_test
+
+import (
+	"testing"
+
+	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// Scott Alden, BGG co-founder
+const aldieUsername = "Aldie"
+const aldieId int64 = 688
+
+func TestGetUserByName(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: aldieUsername})
+	require.NoError(t, err)
+	assert.Equal(t, aldieId, response.Id)
+	assert.Equal(t, aldieUsername, response.Name)
+}
+
+func TestGetUserPopulatesProfile(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: aldieUsername})
+	require.NoError(t, err)
+	assert.NotEmpty(t, response.TermsOfUse)
+	assert.Equal(t, "Scott", response.FirstName.Value)
+	assert.Equal(t, "Alden", response.LastName.Value)
+	assert.Equal(t, "1999", response.YearRegistered.Value)
+	assert.Equal(t, "United States", response.Country.Value)
+	assert.NotEmpty(t, response.AvatarLink.Value)
+	assert.NotEmpty(t, response.LastLogin.Value)
+	assert.NotEmpty(t, response.TradeRating.Value)
+}
+
+func TestGetUserOmitsOptionalSectionsByDefault(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: aldieUsername})
+	require.NoError(t, err)
+	assert.Nil(t, response.Buddies)
+	assert.Nil(t, response.Guilds)
+	assert.Nil(t, response.Hot)
+	assert.Nil(t, response.Top)
+}
+
+func TestGetUserWithBuddies(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: aldieUsername, Buddies: true})
+	require.NoError(t, err)
+	require.NotNil(t, response.Buddies)
+	assert.Positive(t, response.Buddies.Total)
+	assert.Equal(t, 1, response.Buddies.Page)
+	require.NotEmpty(t, response.Buddies.Buddies)
+	assert.NotZero(t, response.Buddies.Buddies[0].Id)
+	assert.NotEmpty(t, response.Buddies.Buddies[0].Name)
+}
+
+func TestGetUserWithGuilds(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: aldieUsername, Guilds: true})
+	require.NoError(t, err)
+	require.NotNil(t, response.Guilds)
+	assert.Positive(t, response.Guilds.Total)
+
+	var guildIds []int64
+	for _, guild := range response.Guilds.Guilds {
+		guildIds = append(guildIds, guild.Id)
+	}
+	assert.Contains(t, guildIds, dallasMetrogamersGuildId)
+}
+
+func TestGetUserWithHotAndTop(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+	request := &boardgamegeek.UserRequest{
+		Name: aldieUsername,
+		Hot:  true,
+		Top:  true,
+	}
+
+	response, err := client.GetUser(ctx, request)
+	require.NoError(t, err)
+	require.NotNil(t, response.Hot)
+	require.NotNil(t, response.Top)
+	assert.Equal(t, string(boardgamegeek.UserDomainBoardGame), response.Hot.Domain)
+	assert.Equal(t, string(boardgamegeek.UserDomainBoardGame), response.Top.Domain)
+	require.NotEmpty(t, response.Top.Items)
+
+	item := response.Top.Items[0]
+	assert.Equal(t, 1, item.Rank)
+	assert.Equal(t, "thing", item.Type)
+	assert.NotZero(t, item.Id)
+	assert.NotEmpty(t, item.Name)
+}
+
+func TestGetUserTopByDomain(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+	request := &boardgamegeek.UserRequest{
+		Name:   aldieUsername,
+		Top:    true,
+		Domain: boardgamegeek.UserDomainRPG,
+	}
+
+	response, err := client.GetUser(ctx, request)
+	require.NoError(t, err)
+	require.NotNil(t, response.Top)
+	assert.Equal(t, string(boardgamegeek.UserDomainRPG), response.Top.Domain)
+}
+
+func TestGetUserUnknownNameReturnsError(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: "zzznosuchuser123xyz"})
+	assert.ErrorContains(t, err, "404")
+	assert.Nil(t, response)
+}

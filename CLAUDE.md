@@ -16,10 +16,19 @@ The goal is to build clean go structs and interfaces to simplify making API requ
     - Client contains all the methods that make requests to boardgamegeek
 3. Each boardgamegeek entity has its own file. E.g. search.go, thing.go and family_item.go contain definitions for the SearchItem, Thing and FamilyItem entities
     - forum.go covers both `/forumlist` (ForumListRequest/ForumListResponse) and `/forum` (ForumRequest/ForumResponse); thread.go covers `/thread`
-    - BGG often signals "not found" with HTTP 200: `/forum` returns an HTML page (GetForum checks the Content-Type) and `/thread` returns an `<error>` document (GetThread checks the root element)
+    - hot.go, user.go, guild.go and collection.go cover `/hot`, `/user`, `/guild` and `/collection`
+    - Shared element types live in search.go: `Name`, `YearPublished` and `ValueElement` (any `<x value="..."/>` element)
+    - BGG often signals "not found" with HTTP 200:
+        - `/forum` returns an HTML page (GetForum checks the Content-Type)
+        - `/thread` and `/guild` return `<error message="..."/>`, parsed by the shared `apiError` in client.go
+        - `/collection` returns `<errors><error><message>`, parsed by `collectionErrors`
+        - `/user` is the exception: an unknown name is a 404
+    - `/collection` returns HTTP 202 while BGG builds the collection. GetCollection returns `ErrCollectionNotReady` and leaves retrying to the caller
+    - Collection status filters are `*bool` (nil = no filter, true = include, false = exclude); build them with `boardgamegeek.Bool`
 4. Integration tests for each boardgamegeek api endpoint are written in integration_test
     - `integration_test/main_test.go` reads the BGG bearer token from the `BGG_API_TOKEN` env var in `TestMain` and fails fast if it is unset; build clients with `newTestClient()`
     - Run with `BGG_API_TOKEN=<token> go test ./integration_test/...`
+    - `newTestClient()` sleeps 2s to keep the suite under BGG's rate limit (429 after ~40 requests in a burst); collection tests wait a further 5s per request because `/collection` is limited more tightly
 
 ## Adding a new boardgamegeek XMLAPI2 endpoint
 1. Create a file for the new endpoint

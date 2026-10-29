@@ -14,6 +14,13 @@ import (
 
 const boadgamegeekURL = "https://boardgamegeek.com/xmlapi2"
 
+// apiError is returned with HTTP 200 in place of the expected document when an entity
+// does not exist, e.g. <error message='Thread Not Found' /> from /thread and /guild
+type apiError struct {
+	XMLName xml.Name `xml:"error"`
+	Message string   `xml:"message,attr"`
+}
+
 type Client struct {
 	httpClient http.Client
 	token      *oauth2.Token
@@ -271,7 +278,7 @@ func (bggClient *Client) GetThread(ctx context.Context, tr *ThreadRequest) (*Thr
 	}
 
 	// BGG responds to an unknown thread id with a 200 <error> document
-	var threadErr threadError
+	var threadErr apiError
 	if xml.Unmarshal(body, &threadErr) == nil {
 		return nil, fmt.Errorf("thread %d: %s", tr.ID, threadErr.Message)
 	}
@@ -283,4 +290,189 @@ func (bggClient *Client) GetThread(ctx context.Context, tr *ThreadRequest) (*Thr
 	}
 
 	return threadResponse, nil
+}
+
+func (bggClient *Client) GetHotItems(ctx context.Context, hr *HotItemsRequest) (*HotItemsResponse, error) {
+	hotURL, urlParseErr := url.Parse(boadgamegeekURL)
+	if urlParseErr != nil {
+		return nil, fmt.Errorf("error parsing boardgamegeek url %w", urlParseErr)
+	}
+
+	hotURL = hotURL.JoinPath("/hot")
+	hotURL.RawQuery = hr.toQueryString()
+
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, hotURL.String(), nil)
+	if reqErr != nil {
+		return nil, fmt.Errorf("error creating get hot items request %w", reqErr)
+	}
+
+	if bggClient.token != nil {
+		bggClient.token.SetAuthHeader(req)
+	}
+
+	resp, bggErr := bggClient.httpClient.Do(req)
+	if bggErr != nil {
+		return nil, fmt.Errorf("recieved error response from boardgamegeek %w", bggErr)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed with status: %s", resp.Status)
+	}
+
+	body, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, fmt.Errorf("error reading response body %w", readErr)
+	}
+	var hotItemsResponse *HotItemsResponse
+	parseErr := xml.Unmarshal(body, &hotItemsResponse)
+	if parseErr != nil {
+		return nil, fmt.Errorf("error parsing xml body %w", parseErr)
+	}
+
+	return hotItemsResponse, nil
+}
+
+func (bggClient *Client) GetUser(ctx context.Context, ur *UserRequest) (*UserResponse, error) {
+	userURL, urlParseErr := url.Parse(boadgamegeekURL)
+	if urlParseErr != nil {
+		return nil, fmt.Errorf("error parsing boardgamegeek url %w", urlParseErr)
+	}
+
+	userURL = userURL.JoinPath("/user")
+	userURL.RawQuery = ur.toQueryString()
+
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, userURL.String(), nil)
+	if reqErr != nil {
+		return nil, fmt.Errorf("error creating get user request %w", reqErr)
+	}
+
+	if bggClient.token != nil {
+		bggClient.token.SetAuthHeader(req)
+	}
+
+	resp, bggErr := bggClient.httpClient.Do(req)
+	if bggErr != nil {
+		return nil, fmt.Errorf("recieved error response from boardgamegeek %w", bggErr)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	// BGG responds to an unknown username with a 404
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed with status: %s", resp.Status)
+	}
+
+	body, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, fmt.Errorf("error reading response body %w", readErr)
+	}
+	var userResponse *UserResponse
+	parseErr := xml.Unmarshal(body, &userResponse)
+	if parseErr != nil {
+		return nil, fmt.Errorf("error parsing xml body %w", parseErr)
+	}
+
+	return userResponse, nil
+}
+
+func (bggClient *Client) GetGuild(ctx context.Context, gr *GuildRequest) (*GuildResponse, error) {
+	guildURL, urlParseErr := url.Parse(boadgamegeekURL)
+	if urlParseErr != nil {
+		return nil, fmt.Errorf("error parsing boardgamegeek url %w", urlParseErr)
+	}
+
+	guildURL = guildURL.JoinPath("/guild")
+	guildURL.RawQuery = gr.toQueryString()
+
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, guildURL.String(), nil)
+	if reqErr != nil {
+		return nil, fmt.Errorf("error creating get guild request %w", reqErr)
+	}
+
+	if bggClient.token != nil {
+		bggClient.token.SetAuthHeader(req)
+	}
+
+	resp, bggErr := bggClient.httpClient.Do(req)
+	if bggErr != nil {
+		return nil, fmt.Errorf("recieved error response from boardgamegeek %w", bggErr)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed with status: %s", resp.Status)
+	}
+
+	body, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, fmt.Errorf("error reading response body %w", readErr)
+	}
+
+	// BGG responds to an unknown guild id with a 200 <error> document
+	var guildErr apiError
+	if xml.Unmarshal(body, &guildErr) == nil {
+		return nil, fmt.Errorf("guild %d: %s", gr.ID, guildErr.Message)
+	}
+
+	var guildResponse *GuildResponse
+	parseErr := xml.Unmarshal(body, &guildResponse)
+	if parseErr != nil {
+		return nil, fmt.Errorf("error parsing xml body %w", parseErr)
+	}
+
+	return guildResponse, nil
+}
+
+// GetCollection returns ErrCollectionNotReady while BGG is still building the collection;
+// callers should retry the same request after a few seconds.
+func (bggClient *Client) GetCollection(ctx context.Context, cr *CollectionRequest) (*CollectionResponse, error) {
+	collectionURL, urlParseErr := url.Parse(boadgamegeekURL)
+	if urlParseErr != nil {
+		return nil, fmt.Errorf("error parsing boardgamegeek url %w", urlParseErr)
+	}
+
+	collectionURL = collectionURL.JoinPath("/collection")
+	collectionURL.RawQuery = cr.toQueryString()
+
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, collectionURL.String(), nil)
+	if reqErr != nil {
+		return nil, fmt.Errorf("error creating get collection request %w", reqErr)
+	}
+
+	if bggClient.token != nil {
+		bggClient.token.SetAuthHeader(req)
+	}
+
+	resp, bggErr := bggClient.httpClient.Do(req)
+	if bggErr != nil {
+		return nil, fmt.Errorf("recieved error response from boardgamegeek %w", bggErr)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode == http.StatusAccepted {
+		return nil, ErrCollectionNotReady
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed with status: %s", resp.Status)
+	}
+
+	body, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, fmt.Errorf("error reading response body %w", readErr)
+	}
+
+	// BGG responds to an invalid request, e.g. an unknown username, with a 200 <errors> document
+	var collectionErrs collectionErrors
+	if xml.Unmarshal(body, &collectionErrs) == nil {
+		return nil, fmt.Errorf("collection for %s: %s", cr.Username, strings.Join(collectionErrs.Messages, "; "))
+	}
+
+	var collectionResponse *CollectionResponse
+	parseErr := xml.Unmarshal(body, &collectionResponse)
+	if parseErr != nil {
+		return nil, fmt.Errorf("error parsing xml body %w", parseErr)
+	}
+
+	return collectionResponse, nil
 }

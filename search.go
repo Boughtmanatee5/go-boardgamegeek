@@ -39,6 +39,11 @@ type YearPublished struct {
 	Value   string   `xml:"value,attr"`
 }
 
+// ValueElement is an element whose only content is a value attribute, e.g. <country value="United States" />
+type ValueElement struct {
+	Value string `xml:"value,attr"`
+}
+
 type Name struct {
 	XMLName   xml.Name `xml:"name"`
 	Type      string   `xml:"type,attr"`

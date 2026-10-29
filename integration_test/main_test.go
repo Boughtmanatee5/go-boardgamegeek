@@ -25,8 +25,8 @@ func TestMain(m *testing.M) {
 }
 
 // testThrottle spaces out tests so the suite stays under BGG's rate limit,
-// which returns 429 Too Many Requests after roughly 40 requests in a burst.
-const testThrottle = 300 * time.Millisecond
+// which returns 429 Too Many Requests after roughly 40 requests in a burst and refills slowly.
+const testThrottle = 2 * time.Second
 
 func newTestClient() *boardgamegeek.Client {
 	time.Sleep(testThrottle)

@@ -5,6 +5,7 @@ import (
 
 	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Catan (base game)
@@ -161,7 +162,7 @@ func TestGetThingsByPage(t *testing.T) {
 		PageSize: 10,
 	}
 	firstPageResponse, err := client.GetThings(ctx, firstPageRequest)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	secondPageRequest := &boardgamegeek.GetThingsRequest{
 		IDs:      []int64{catanId},
@@ -170,7 +171,7 @@ func TestGetThingsByPage(t *testing.T) {
 		PageSize: 10,
 	}
 	secondPageResponse, err := client.GetThings(ctx, secondPageRequest)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.NotEqual(t,
 		firstPageResponse.Items[0].Comments.Comments[0].Username,

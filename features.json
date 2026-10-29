@@ -20,20 +20,20 @@
         "evidence": "2026-10-29T15:56:48Z go test ./integration_test/... -count=1: 46/46 passed (6 thread tests); golangci-lint run: 0 issues"
     },
     "users": {
-        "status": "incomplete",
-        "evidence": null
+        "status": "done",
+        "evidence": "2026-10-29T16:37:50Z go test ./integration_test/... -count=1: 73/73 passed (8 user tests); golangci-lint run: 0 issues"
     },
     "guilds": {
-        "status": "incomplete",
-        "evidence": null
+        "status": "done",
+        "evidence": "2026-10-29T16:37:50Z go test ./integration_test/... -count=1: 73/73 passed (7 guild tests); golangci-lint run: 0 issues"
     },
     "collection": {
-        "status": "incomplete",
-        "evidence": null
+        "status": "done",
+        "evidence": "2026-10-29T16:37:50Z go test ./integration_test/... -count=1: 73/73 passed (8 collection tests); golangci-lint run: 0 issues"
     },
     "hot": {
-        "status": "incomplete",
-        "evidence": null
+        "status": "done",
+        "evidence": "2026-10-29T16:37:50Z go test ./integration_test/... -count=1: 73/73 passed (4 hot tests); golangci-lint run: 0 issues"
     },
     "forum": {
         "status": "done",

@@ -53,9 +53,3 @@ type ThreadResponse struct {
 	Subject     string     `xml:"subject"`
 	Articles    []*Article `xml:"articles>article"`
 }
-
-// threadError is returned in place of <thread> when the thread does not exist.
-type threadError struct {
-	XMLName xml.Name `xml:"error"`
-	Message string   `xml:"message,attr"`
-}
