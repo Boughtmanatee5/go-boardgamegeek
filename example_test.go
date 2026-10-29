@@ -23,7 +23,7 @@ func ExampleNewClient() {
 
 	resp, err := client.Search(context.Background(), &boardgamegeek.SearchOptions{
 		Query: "Catan",
-		Types: []boardgamegeek.ThingType{boardgamegeek.ThingTypeBoardGame},
+		Types: []boardgamegeek.SearchType{boardgamegeek.SearchTypeBoardGame},
 		Exact: true,
 	})
 	if err != nil {

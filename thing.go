@@ -4,17 +4,18 @@ import (
 	"encoding/xml"
 )
 
-// ThingType is the type of a thing, used to filter Search and GetThings
+// ThingType is the type of a thing, used to filter GetThings and GetCollection.
+// Search takes a SearchType, which also covers types that are not things.
 type ThingType string
 
-// Thing types accepted by SearchOptions.Types and ThingsOptions.Types
+// Thing types accepted by ThingsOptions.Types and CollectionOptions.Subtype
 const (
 	ThingTypeRPGItem            ThingType = "rpgitem"
+	ThingTypeRPGIssue           ThingType = "rpgissue"
 	ThingTypeVideoGame          ThingType = "videogame"
 	ThingTypeBoardGame          ThingType = "boardgame"
 	ThingTypeBoardGameAccessory ThingType = "boardgameaccessory"
 	ThingTypeBoardGameExpansion ThingType = "boardgameexpansion"
-	ThingTypeBoardGameDesigner  ThingType = "boardgamedesigner"
 )
 
 // ThingsOptions are the parameters for GetThings and AllThingComments

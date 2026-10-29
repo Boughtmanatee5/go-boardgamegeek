@@ -22,12 +22,12 @@ func TestSearch(t *testing.T) {
 	assert.Equal(t, int(response.Total), len(response.Items))
 }
 
-func TestSearchByThingType(t *testing.T) {
+func TestSearchByType(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()
 	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "guards of atlantis II",
-		Types: []boardgamegeek.ThingType{boardgamegeek.ThingTypeBoardGame},
+		Types: []boardgamegeek.SearchType{boardgamegeek.SearchTypeBoardGame},
 	}
 
 	response, err := client.Search(ctx, searchRequest)
@@ -35,7 +35,7 @@ func TestSearchByThingType(t *testing.T) {
 	assert.Equal(t, int(response.Total), len(response.Items))
 
 	for _, item := range response.Items {
-		assert.Equal(t, string(boardgamegeek.ThingTypeBoardGame), item.Type)
+		assert.Equal(t, string(boardgamegeek.SearchTypeBoardGame), item.Type)
 	}
 }
 
@@ -61,7 +61,7 @@ func TestSearchByMultipleTypes(t *testing.T) {
 	client := newTestClient()
 	searchRequest := &boardgamegeek.SearchOptions{
 		Query: "catan",
-		Types: []boardgamegeek.ThingType{boardgamegeek.ThingTypeBoardGame, boardgamegeek.ThingTypeBoardGameExpansion},
+		Types: []boardgamegeek.SearchType{boardgamegeek.SearchTypeBoardGame, boardgamegeek.SearchTypeBoardGameExpansion},
 	}
 
 	response, err := client.Search(ctx, searchRequest)
@@ -69,7 +69,43 @@ func TestSearchByMultipleTypes(t *testing.T) {
 	assert.Equal(t, int(response.Total), len(response.Items))
 
 	for _, item := range response.Items {
-		assert.Contains(t, []string{string(boardgamegeek.ThingTypeBoardGame), string(boardgamegeek.ThingTypeBoardGameExpansion)}, item.Type)
+		assert.Contains(t, []string{string(boardgamegeek.SearchTypeBoardGame), string(boardgamegeek.SearchTypeBoardGameExpansion)}, item.Type)
+	}
+}
+
+func TestSearchByDesignerType(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+	searchRequest := &boardgamegeek.SearchOptions{
+		Query: "reiner knizia",
+		Types: []boardgamegeek.SearchType{boardgamegeek.SearchTypeBoardGameDesigner},
+		Exact: true,
+	}
+
+	response, err := client.Search(ctx, searchRequest)
+	require.NoError(t, err)
+	require.Len(t, response.Items, 1)
+	// designers have their own ids: 2 is Reiner Knizia, while thing 2 is the game Dragonmaster
+	assert.Equal(t, int64(2), response.Items[0].ID)
+	assert.Equal(t, string(boardgamegeek.SearchTypeBoardGameDesigner), response.Items[0].Type)
+	require.NotNil(t, response.Items[0].Name)
+	assert.Equal(t, "Reiner Knizia", response.Items[0].Name.Value)
+}
+
+func TestSearchByRPGIssueType(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+	searchRequest := &boardgamegeek.SearchOptions{
+		Query: "dragon",
+		Types: []boardgamegeek.SearchType{boardgamegeek.SearchTypeRPGIssue},
+	}
+
+	response, err := client.Search(ctx, searchRequest)
+	require.NoError(t, err)
+	assert.NotEmpty(t, response.Items)
+
+	for _, item := range response.Items {
+		assert.Equal(t, string(boardgamegeek.SearchTypeRPGIssue), item.Type)
 	}
 }
 

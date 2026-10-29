@@ -65,6 +65,22 @@ func TestGetThingsByType(t *testing.T) {
 	assert.Equal(t, string(boardgamegeek.ThingTypeBoardGameExpansion), response.Items[0].Type)
 }
 
+func TestGetThingsByRPGIssueType(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+	// 140367 is an rpgissue: "& (Issue 1 - Summer 2012)"
+	request := &boardgamegeek.ThingsOptions{
+		IDs:   []int64{catanID, 140367},
+		Types: []boardgamegeek.ThingType{boardgamegeek.ThingTypeRPGIssue},
+	}
+
+	response, err := client.GetThings(ctx, request)
+	require.NoError(t, err)
+	require.Len(t, response.Items, 1)
+	assert.Equal(t, int64(140367), response.Items[0].ID)
+	assert.Equal(t, string(boardgamegeek.ThingTypeRPGIssue), response.Items[0].Type)
+}
+
 func TestGetThingsWithVersions(t *testing.T) {
 	ctx := t.Context()
 	client := newTestClient()

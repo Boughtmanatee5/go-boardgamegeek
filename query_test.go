@@ -23,8 +23,13 @@ func TestRequestQueryEncoding(t *testing.T) {
 		},
 		{
 			name:    "search with types and exact",
-			request: &SearchOptions{Query: "catan", Types: []ThingType{ThingTypeBoardGame, ThingTypeBoardGameExpansion}, Exact: true},
+			request: &SearchOptions{Query: "catan", Types: []SearchType{SearchTypeBoardGame, SearchTypeBoardGameExpansion}, Exact: true},
 			want:    "exact=1&query=catan&type=boardgame%2Cboardgameexpansion",
+		},
+		{
+			name:    "search with non-thing types",
+			request: &SearchOptions{Query: "dragon", Types: []SearchType{SearchTypeBoardGameDesigner, SearchTypeRPGIssue}},
+			want:    "query=dragon&type=boardgamedesigner%2Crpgissue",
 		},
 		{
 			name:    "search keeps an empty query",
