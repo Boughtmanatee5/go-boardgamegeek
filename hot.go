@@ -32,13 +32,13 @@ func (r *HotItemsRequest) toQueryString() string {
 }
 
 type HotItem struct {
-	XMLName   xml.Name     `xml:"item"`
-	Id        int64        `xml:"id,attr"`
-	Rank      int          `xml:"rank,attr"`
-	Thumbnail ValueElement `xml:"thumbnail"`
-	Name      ValueElement `xml:"name"`
+	XMLName   xml.Name  `xml:"item"`
+	Id        int64     `xml:"id,attr"`
+	Rank      int       `xml:"rank,attr"`
+	Thumbnail ValueAttr `xml:"thumbnail"`
+	Name      ValueAttr `xml:"name"`
 	// Only present for game types, not people or companies
-	YearPublished *YearPublished `xml:"yearpublished"`
+	YearPublished *ValueAttr `xml:"yearpublished"`
 }
 
 type HotItemsResponse struct {

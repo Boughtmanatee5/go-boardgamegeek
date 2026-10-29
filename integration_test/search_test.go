@@ -5,6 +5,7 @@ import (
 
 	boardgamegeek "github.com/Boughtmanatee5/BoardGameGeekClient"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSearch(t *testing.T) {
@@ -49,6 +50,8 @@ func TestSearchByExact(t *testing.T) {
 	assert.Equal(t, 1, len(response.Items))
 	// gaurds of atlantis 2 id
 	assert.Equal(t, int64(267609), response.Items[0].Id)
+	require.NotNil(t, response.Items[0].YearPublished)
+	assert.Equal(t, "2022", string(*response.Items[0].YearPublished))
 }
 
 func TestSearchByMultipleTypes(t *testing.T) {

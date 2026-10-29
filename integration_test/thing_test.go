@@ -26,6 +26,8 @@ func TestGetThingsById(t *testing.T) {
 	assert.Len(t, response.Items, 1)
 	assert.Equal(t, catanId, response.Items[0].Id)
 	assert.Equal(t, string(boardgamegeek.BOARDGAME), response.Items[0].Type)
+	require.NotNil(t, response.Items[0].YearPublished)
+	assert.Equal(t, "1995", string(*response.Items[0].YearPublished))
 }
 
 func TestGetThingsByMultipleIds(t *testing.T) {

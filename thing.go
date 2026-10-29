@@ -140,7 +140,7 @@ type Thing struct {
 	Type                string               `xml:"type,attr"`
 	Id                  int64                `xml:"id,attr"`
 	Names               []*Name              `xml:"name"`
-	YearPublished       *YearPublished       `xml:"yearpublished"`
+	YearPublished       *ValueAttr           `xml:"yearpublished"`
 	Statistics          *Statistics          `xml:"statistics"`
 	Versions            *Versions            `xml:"versions"`
 	Videos              *Videos              `xml:"videos"`

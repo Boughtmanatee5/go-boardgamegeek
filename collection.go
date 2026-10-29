@@ -181,11 +181,11 @@ type CollectionRating struct {
 	XMLName xml.Name `xml:"rating"`
 	// Value is the user's rating, "N/A" when unrated
 	Value        string            `xml:"value,attr"`
-	UsersRated   ValueElement      `xml:"usersrated"`
-	Average      ValueElement      `xml:"average"`
-	BayesAverage ValueElement      `xml:"bayesaverage"`
-	StdDev       ValueElement      `xml:"stddev"`
-	Median       ValueElement      `xml:"median"`
+	UsersRated   ValueAttr         `xml:"usersrated"`
+	Average      ValueAttr         `xml:"average"`
+	BayesAverage ValueAttr         `xml:"bayesaverage"`
+	StdDev       ValueAttr         `xml:"stddev"`
+	Median       ValueAttr         `xml:"median"`
 	Ranks        []*CollectionRank `xml:"ranks>rank"`
 }
 

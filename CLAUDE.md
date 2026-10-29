@@ -17,7 +17,7 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 3. Each boardgamegeek entity has its own file. E.g. search.go, thing.go and family_item.go contain definitions for the SearchItem, Thing and FamilyItem entities
     - forum.go covers both `/forumlist` (ForumListRequest/ForumListResponse) and `/forum` (ForumRequest/ForumResponse); thread.go covers `/thread`
     - hot.go, user.go, guild.go and collection.go cover `/hot`, `/user`, `/guild` and `/collection`
-    - Shared element types live in search.go: `Name`, `YearPublished` and `ValueElement` (any `<x value="..."/>` element)
+    - Shared element types live in search.go: `Name`, and `ValueAttr`, a string type whose `UnmarshalXML` reads the `value` attribute of any `<x value="..."/>` element. Use `ValueAttr` for those elements instead of a wrapper struct, and `*ValueAttr` when the element is optional
     - BGG often signals "not found" with HTTP 200:
         - `/forum` returns an HTML page (GetForum checks the Content-Type)
         - `/thread` and `/guild` return `<error message="..."/>`, parsed by the shared `apiError` in client.go

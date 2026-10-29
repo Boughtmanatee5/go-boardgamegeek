@@ -34,14 +34,17 @@ func (sr *SearchRequest) toQueryString() string {
 	return searchQuery
 }
 
-type YearPublished struct {
-	XMLName xml.Name `xml:"yearpublished"`
-	Value   string   `xml:"value,attr"`
-}
+// ValueAttr unmarshals an element whose only content is a value attribute, e.g. <country value="United States" />,
+// to the attribute's value. Use *ValueAttr for optional elements so they are nil when absent.
+type ValueAttr string
 
-// ValueElement is an element whose only content is a value attribute, e.g. <country value="United States" />
-type ValueElement struct {
-	Value string `xml:"value,attr"`
+func (v *ValueAttr) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if attr.Name.Local == "value" {
+			*v = ValueAttr(attr.Value)
+		}
+	}
+	return d.Skip()
 }
 
 type Name struct {
@@ -52,12 +55,12 @@ type Name struct {
 }
 
 type SearchItem struct {
-	XMLName       xml.Name       `xml:"item"`
-	Text          string         `xml:",chardata"`
-	Type          string         `xml:"type,attr"`
-	Id            int64          `xml:"id,attr"`
-	Name          *Name          `xml:"name"`
-	YearPublished *YearPublished `xml:"yearpublished"`
+	XMLName       xml.Name   `xml:"item"`
+	Text          string     `xml:",chardata"`
+	Type          string     `xml:"type,attr"`
+	Id            int64      `xml:"id,attr"`
+	Name          *Name      `xml:"name"`
+	YearPublished *ValueAttr `xml:"yearpublished"`
 }
 
 type SearchResponse struct {

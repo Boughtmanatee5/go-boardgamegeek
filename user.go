@@ -101,20 +101,20 @@ type UserResponse struct {
 	Id               int64            `xml:"id,attr"`
 	Name             string           `xml:"name,attr"`
 	TermsOfUse       string           `xml:"termsofuse,attr"`
-	FirstName        ValueElement     `xml:"firstname"`
-	LastName         ValueElement     `xml:"lastname"`
-	AvatarLink       ValueElement     `xml:"avatarlink"`
-	YearRegistered   ValueElement     `xml:"yearregistered"`
-	LastLogin        ValueElement     `xml:"lastlogin"`
-	StateOrProvince  ValueElement     `xml:"stateorprovince"`
-	Country          ValueElement     `xml:"country"`
-	WebAddress       ValueElement     `xml:"webaddress"`
-	XboxAccount      ValueElement     `xml:"xboxaccount"`
-	WiiAccount       ValueElement     `xml:"wiiaccount"`
-	PSNAccount       ValueElement     `xml:"psnaccount"`
-	BattleNetAccount ValueElement     `xml:"battlenetaccount"`
-	SteamAccount     ValueElement     `xml:"steamaccount"`
-	TradeRating      ValueElement     `xml:"traderating"`
+	FirstName        ValueAttr        `xml:"firstname"`
+	LastName         ValueAttr        `xml:"lastname"`
+	AvatarLink       ValueAttr        `xml:"avatarlink"`
+	YearRegistered   ValueAttr        `xml:"yearregistered"`
+	LastLogin        ValueAttr        `xml:"lastlogin"`
+	StateOrProvince  ValueAttr        `xml:"stateorprovince"`
+	Country          ValueAttr        `xml:"country"`
+	WebAddress       ValueAttr        `xml:"webaddress"`
+	XboxAccount      ValueAttr        `xml:"xboxaccount"`
+	WiiAccount       ValueAttr        `xml:"wiiaccount"`
+	PSNAccount       ValueAttr        `xml:"psnaccount"`
+	BattleNetAccount ValueAttr        `xml:"battlenetaccount"`
+	SteamAccount     ValueAttr        `xml:"steamaccount"`
+	TradeRating      ValueAttr        `xml:"traderating"`
 	Buddies          *UserBuddies     `xml:"buddies"`
 	Guilds           *UserGuilds      `xml:"guilds"`
 	Hot              *UserRankedItems `xml:"hot"`

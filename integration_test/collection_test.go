@@ -92,8 +92,8 @@ func TestGetCollectionWithStats(t *testing.T) {
 	assert.Positive(t, stats.NumOwned)
 	require.NotNil(t, stats.Rating)
 	assert.NotEmpty(t, stats.Rating.Value)
-	assert.NotEmpty(t, stats.Rating.Average.Value)
-	assert.NotEmpty(t, stats.Rating.UsersRated.Value)
+	assert.NotEmpty(t, stats.Rating.Average)
+	assert.NotEmpty(t, stats.Rating.UsersRated)
 	require.NotEmpty(t, stats.Rating.Ranks)
 	assert.Equal(t, "boardgame", stats.Rating.Ranks[0].Name)
 }

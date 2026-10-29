@@ -29,13 +29,13 @@ func TestGetUserPopulatesProfile(t *testing.T) {
 	response, err := client.GetUser(ctx, &boardgamegeek.UserRequest{Name: aldieUsername})
 	require.NoError(t, err)
 	assert.NotEmpty(t, response.TermsOfUse)
-	assert.Equal(t, "Scott", response.FirstName.Value)
-	assert.Equal(t, "Alden", response.LastName.Value)
-	assert.Equal(t, "1999", response.YearRegistered.Value)
-	assert.Equal(t, "United States", response.Country.Value)
-	assert.NotEmpty(t, response.AvatarLink.Value)
-	assert.NotEmpty(t, response.LastLogin.Value)
-	assert.NotEmpty(t, response.TradeRating.Value)
+	assert.Equal(t, "Scott", string(response.FirstName))
+	assert.Equal(t, "Alden", string(response.LastName))
+	assert.Equal(t, "1999", string(response.YearRegistered))
+	assert.Equal(t, "United States", string(response.Country))
+	assert.NotEmpty(t, response.AvatarLink)
+	assert.NotEmpty(t, response.LastLogin)
+	assert.NotEmpty(t, response.TradeRating)
 }
 
 func TestGetUserOmitsOptionalSectionsByDefault(t *testing.T) {
