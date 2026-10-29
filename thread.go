@@ -2,34 +2,14 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
-	"net/url"
 )
 
 type ThreadRequest struct {
-	ID           int64
-	MinArticleID int64
+	ID           int64 `url:"id"`
+	MinArticleID int64 `url:"minarticleid,omitempty"`
 	// MinArticleDate is YYYY-MM-DD or YYYY-MM-DD HH:MM:SS
-	MinArticleDate string
-	Count          int
-}
-
-func (r *ThreadRequest) toQueryString() string {
-	query := fmt.Sprintf("id=%d", r.ID)
-
-	if r.MinArticleID > 0 {
-		query = fmt.Sprintf("%s&minarticleid=%d", query, r.MinArticleID)
-	}
-
-	if r.MinArticleDate != "" {
-		query = fmt.Sprintf("%s&minarticledate=%s", query, url.QueryEscape(r.MinArticleDate))
-	}
-
-	if r.Count > 0 {
-		query = fmt.Sprintf("%s&count=%d", query, r.Count)
-	}
-
-	return query
+	MinArticleDate string `url:"minarticledate,omitempty"`
+	Count          int    `url:"count,omitempty"`
 }
 
 type Article struct {

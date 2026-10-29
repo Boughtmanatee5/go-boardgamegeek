@@ -2,7 +2,6 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
 type ForumListType string
@@ -13,12 +12,8 @@ const (
 )
 
 type ForumListRequest struct {
-	ID   int64
-	Type ForumListType
-}
-
-func (r *ForumListRequest) toQueryString() string {
-	return fmt.Sprintf("id=%d&type=%s", r.ID, r.Type)
+	ID   int64         `url:"id"`
+	Type ForumListType `url:"type"`
 }
 
 type ForumSummary struct {
@@ -42,18 +37,8 @@ type ForumListResponse struct {
 }
 
 type ForumRequest struct {
-	ID   int64
-	Page int
-}
-
-func (r *ForumRequest) toQueryString() string {
-	query := fmt.Sprintf("id=%d", r.ID)
-
-	if r.Page > 0 {
-		query = fmt.Sprintf("%s&page=%d", query, r.Page)
-	}
-
-	return query
+	ID   int64 `url:"id"`
+	Page int   `url:"page,omitempty"`
 }
 
 type ThreadSummary struct {

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/google/go-querystring/query"
 )
 
 const (
@@ -71,13 +73,18 @@ func NewClient(options ...ClientOption) *Client {
 	return c
 }
 
-// get requests path with the given query and unmarshals the xml body into v.
+// get requests path with opts, a request struct encoded by its `url` tags, and unmarshals the xml body into v.
 // It returns *AcceptedError for 202, *RateLimitError for 429 and *ErrorResponse for any other
 // non-200 status or for a 200 <error>/<errors> document or non-xml body. 404s and <error>
 // documents match ErrNotFound; endpoints mark their own not-found quirks with markNotFound.
-func (bggClient *Client) get(ctx context.Context, path string, query string, v any) error {
+func (bggClient *Client) get(ctx context.Context, path string, opts any, v any) error {
+	params, encodeErr := query.Values(opts)
+	if encodeErr != nil {
+		return fmt.Errorf("error encoding %s query %w", path, encodeErr)
+	}
+
 	reqURL := bggClient.baseURL.JoinPath(path)
-	reqURL.RawQuery = query
+	reqURL.RawQuery = params.Encode()
 
 	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
 	if reqErr != nil {
@@ -144,7 +151,7 @@ func markNotFound(err error, notFound func(*ErrorResponse) bool) error {
 
 func (bggClient *Client) Search(ctx context.Context, sr *SearchRequest) (*SearchResponse, error) {
 	var searchResponse SearchResponse
-	if err := bggClient.get(ctx, "/search", sr.toQueryString(), &searchResponse); err != nil {
+	if err := bggClient.get(ctx, "/search", sr, &searchResponse); err != nil {
 		return nil, err
 	}
 	return &searchResponse, nil
@@ -152,7 +159,7 @@ func (bggClient *Client) Search(ctx context.Context, sr *SearchRequest) (*Search
 
 func (bggClient *Client) GetThings(ctx context.Context, gr *GetThingsRequest) (*GetThingsResponse, error) {
 	var getThingsResponse GetThingsResponse
-	if err := bggClient.get(ctx, "/thing", gr.toQueryString(), &getThingsResponse); err != nil {
+	if err := bggClient.get(ctx, "/thing", gr, &getThingsResponse); err != nil {
 		return nil, err
 	}
 	return &getThingsResponse, nil
@@ -160,7 +167,7 @@ func (bggClient *Client) GetThings(ctx context.Context, gr *GetThingsRequest) (*
 
 func (bggClient *Client) GetFamilyItems(ctx context.Context, fr *FamilyItemRequest) (*FamilyItemsResponse, error) {
 	var familyItemsResponse FamilyItemsResponse
-	if err := bggClient.get(ctx, "/family", fr.toQueryString(), &familyItemsResponse); err != nil {
+	if err := bggClient.get(ctx, "/family", fr, &familyItemsResponse); err != nil {
 		return nil, err
 	}
 	return &familyItemsResponse, nil
@@ -168,7 +175,7 @@ func (bggClient *Client) GetFamilyItems(ctx context.Context, fr *FamilyItemReque
 
 func (bggClient *Client) GetForumList(ctx context.Context, fr *ForumListRequest) (*ForumListResponse, error) {
 	var forumListResponse ForumListResponse
-	if err := bggClient.get(ctx, "/forumlist", fr.toQueryString(), &forumListResponse); err != nil {
+	if err := bggClient.get(ctx, "/forumlist", fr, &forumListResponse); err != nil {
 		return nil, err
 	}
 	return &forumListResponse, nil
@@ -177,7 +184,7 @@ func (bggClient *Client) GetForumList(ctx context.Context, fr *ForumListRequest)
 // GetForum returns an error matching ErrNotFound for an unknown forum id
 func (bggClient *Client) GetForum(ctx context.Context, fr *ForumRequest) (*ForumResponse, error) {
 	var forumResponse ForumResponse
-	if err := bggClient.get(ctx, "/forum", fr.toQueryString(), &forumResponse); err != nil {
+	if err := bggClient.get(ctx, "/forum", fr, &forumResponse); err != nil {
 		// BGG responds to an unknown forum id with a 200 html page rather than xml
 		err = markNotFound(err, func(e *ErrorResponse) bool {
 			return e.Response.StatusCode == http.StatusOK && strings.Contains(e.Response.Header.Get("Content-Type"), "html")
@@ -190,7 +197,7 @@ func (bggClient *Client) GetForum(ctx context.Context, fr *ForumRequest) (*Forum
 // GetThread returns an error matching ErrNotFound for an unknown thread id
 func (bggClient *Client) GetThread(ctx context.Context, tr *ThreadRequest) (*ThreadResponse, error) {
 	var threadResponse ThreadResponse
-	if err := bggClient.get(ctx, "/thread", tr.toQueryString(), &threadResponse); err != nil {
+	if err := bggClient.get(ctx, "/thread", tr, &threadResponse); err != nil {
 		return nil, fmt.Errorf("thread %d: %w", tr.ID, err)
 	}
 	return &threadResponse, nil
@@ -198,7 +205,7 @@ func (bggClient *Client) GetThread(ctx context.Context, tr *ThreadRequest) (*Thr
 
 func (bggClient *Client) GetHotItems(ctx context.Context, hr *HotItemsRequest) (*HotItemsResponse, error) {
 	var hotItemsResponse HotItemsResponse
-	if err := bggClient.get(ctx, "/hot", hr.toQueryString(), &hotItemsResponse); err != nil {
+	if err := bggClient.get(ctx, "/hot", hr, &hotItemsResponse); err != nil {
 		return nil, err
 	}
 	return &hotItemsResponse, nil
@@ -207,7 +214,7 @@ func (bggClient *Client) GetHotItems(ctx context.Context, hr *HotItemsRequest) (
 // GetUser returns an error matching ErrNotFound for an unknown username
 func (bggClient *Client) GetUser(ctx context.Context, ur *UserRequest) (*UserResponse, error) {
 	var userResponse UserResponse
-	if err := bggClient.get(ctx, "/user", ur.toQueryString(), &userResponse); err != nil {
+	if err := bggClient.get(ctx, "/user", ur, &userResponse); err != nil {
 		return nil, fmt.Errorf("user %s: %w", ur.Name, err)
 	}
 	return &userResponse, nil
@@ -216,7 +223,7 @@ func (bggClient *Client) GetUser(ctx context.Context, ur *UserRequest) (*UserRes
 // GetGuild returns an error matching ErrNotFound for an unknown guild id
 func (bggClient *Client) GetGuild(ctx context.Context, gr *GuildRequest) (*GuildResponse, error) {
 	var guildResponse GuildResponse
-	if err := bggClient.get(ctx, "/guild", gr.toQueryString(), &guildResponse); err != nil {
+	if err := bggClient.get(ctx, "/guild", gr, &guildResponse); err != nil {
 		return nil, fmt.Errorf("guild %d: %w", gr.ID, err)
 	}
 	return &guildResponse, nil
@@ -227,7 +234,7 @@ func (bggClient *Client) GetGuild(ctx context.Context, gr *GuildRequest) (*Guild
 // An unknown username returns an error matching ErrNotFound.
 func (bggClient *Client) GetCollection(ctx context.Context, cr *CollectionRequest) (*CollectionResponse, error) {
 	var collectionResponse CollectionResponse
-	if err := bggClient.get(ctx, "/collection", cr.toQueryString(), &collectionResponse); err != nil {
+	if err := bggClient.get(ctx, "/collection", cr, &collectionResponse); err != nil {
 		// BGG responds to an unknown username with a 200 <errors> document
 		err = markNotFound(err, func(e *ErrorResponse) bool {
 			return strings.Contains(e.Message, "Invalid username specified")

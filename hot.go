@@ -2,7 +2,6 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
 type HotItemType string
@@ -20,15 +19,7 @@ const (
 
 // HotItemsRequest takes a single Type: BGG ignores a list of types and falls back to boardgame.
 type HotItemsRequest struct {
-	Type HotItemType
-}
-
-func (r *HotItemsRequest) toQueryString() string {
-	if r.Type == "" {
-		return ""
-	}
-
-	return fmt.Sprintf("type=%s", r.Type)
+	Type HotItemType `url:"type,omitempty"`
 }
 
 type HotItem struct {

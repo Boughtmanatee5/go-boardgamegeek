@@ -2,9 +2,6 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
-	"strconv"
-	"strings"
 )
 
 type FamilyItemType string
@@ -16,26 +13,8 @@ const (
 )
 
 type FamilyItemRequest struct {
-	IDs   []int64
-	Types []FamilyItemType
-}
-
-func (r *FamilyItemRequest) toQueryString() string {
-	var ids []string
-	for _, id := range r.IDs {
-		ids = append(ids, strconv.FormatInt(id, 10))
-	}
-	query := fmt.Sprintf("id=%s", strings.Join(ids, ","))
-
-	if len(r.Types) != 0 {
-		var types []string
-		for _, familyType := range r.Types {
-			types = append(types, string(familyType))
-		}
-		query = fmt.Sprintf("%s&type=%s", query, strings.Join(types, ","))
-	}
-
-	return query
+	IDs   []int64          `url:"id,comma"`
+	Types []FamilyItemType `url:"type,comma,omitempty"`
 }
 
 type FamilyLink struct {

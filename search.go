@@ -2,36 +2,12 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
-	"strings"
 )
 
 type SearchRequest struct {
-	Query string
-	Types []ThingType
-	Exact bool
-}
-
-func (sr *SearchRequest) toQueryString() string {
-	searchQuery := fmt.Sprintf("query=%s", strings.ReplaceAll(sr.Query, " ", "+"))
-
-	if len(sr.Types) != 0 {
-		typesQuery := "type="
-		for i, bggType := range sr.Types {
-			if i == 0 {
-				typesQuery = fmt.Sprintf("%s%s", typesQuery, bggType)
-				continue
-			}
-			typesQuery = fmt.Sprintf("%s,%s", typesQuery, bggType)
-		}
-		searchQuery = fmt.Sprintf("%s&%s", searchQuery, typesQuery)
-	}
-
-	if sr.Exact {
-		searchQuery = fmt.Sprintf("%s&exact=%d", searchQuery, 1)
-	}
-
-	return searchQuery
+	Query string      `url:"query"`
+	Types []ThingType `url:"type,comma,omitempty"`
+	Exact bool        `url:"exact,int,omitempty"`
 }
 
 // ValueAttr unmarshals an element whose only content is a value attribute, e.g. <country value="United States" />,

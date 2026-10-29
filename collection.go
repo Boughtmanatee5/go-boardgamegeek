@@ -3,9 +3,6 @@ package boardgamegeek
 import (
 	"encoding/xml"
 	"errors"
-	"net/url"
-	"strconv"
-	"strings"
 )
 
 // ErrCollectionNotReady matches, with errors.Is, the *AcceptedError returned when BGG has queued
@@ -19,130 +16,43 @@ func Bool(b bool) *bool {
 
 type CollectionRequest struct {
 	// Username is required
-	Username       string
-	Version        bool
-	Subtype        ThingType
-	ExcludeSubtype ThingType
-	IDs            []int64
+	Username       string    `url:"username"`
+	Version        bool      `url:"version,int,omitempty"`
+	Subtype        ThingType `url:"subtype,omitempty"`
+	ExcludeSubtype ThingType `url:"excludesubtype,omitempty"`
+	IDs            []int64   `url:"id,comma,omitempty"`
 	// Brief returns only the name and status of each item
-	Brief bool
-	Stats bool
+	Brief bool `url:"brief,int,omitempty"`
+	Stats bool `url:"stats,int,omitempty"`
 	// Status filters: nil means no filter, true includes only matching items, false excludes them
-	Own        *bool
-	Rated      *bool
-	Played     *bool
-	Comment    *bool
-	Trade      *bool
-	Want       *bool
-	Wishlist   *bool
-	Preordered *bool
-	WantToPlay *bool
-	WantToBuy  *bool
-	PrevOwned  *bool
-	HasParts   *bool
-	WantParts  *bool
+	Own        *bool `url:"own,int,omitempty"`
+	Rated      *bool `url:"rated,int,omitempty"`
+	Played     *bool `url:"played,int,omitempty"`
+	Comment    *bool `url:"comment,int,omitempty"`
+	Trade      *bool `url:"trade,int,omitempty"`
+	Want       *bool `url:"want,int,omitempty"`
+	Wishlist   *bool `url:"wishlist,int,omitempty"`
+	Preordered *bool `url:"preordered,int,omitempty"`
+	WantToPlay *bool `url:"wanttoplay,int,omitempty"`
+	WantToBuy  *bool `url:"wanttobuy,int,omitempty"`
+	PrevOwned  *bool `url:"prevowned,int,omitempty"`
+	HasParts   *bool `url:"hasparts,int,omitempty"`
+	WantParts  *bool `url:"wantparts,int,omitempty"`
 	// WishlistPriority filters on wishlist priority 1-5, 0 means no filter
-	WishlistPriority int
+	WishlistPriority int `url:"wishlistpriority,omitempty"`
 	// Rating filters are 1-10, 0 means no filter
-	MinRating    float64
-	Rating       float64
-	MinBGGRating float64
-	BGGRating    float64
+	MinRating    float64 `url:"minrating,omitempty"`
+	Rating       float64 `url:"rating,omitempty"`
+	MinBGGRating float64 `url:"minbggrating,omitempty"`
+	BGGRating    float64 `url:"bggrating,omitempty"`
 	// Play count filters, 0 means no filter
-	MinPlays int
-	MaxPlays int
+	MinPlays int `url:"minplays,omitempty"`
+	MaxPlays int `url:"maxplays,omitempty"`
 	// ShowPrivate only returns private info for the authenticated user's own collection
-	ShowPrivate bool
-	CollID      int64
+	ShowPrivate bool  `url:"showprivate,int,omitempty"`
+	CollID      int64 `url:"collid,omitempty"`
 	// ModifiedSince is YY-MM-DD or YY-MM-DD HH:MM:SS
-	ModifiedSince string
-}
-
-func (r *CollectionRequest) toQueryString() string {
-	query := url.Values{}
-	query.Set("username", r.Username)
-
-	if r.Version {
-		query.Set("version", "1")
-	}
-	if r.Subtype != "" {
-		query.Set("subtype", string(r.Subtype))
-	}
-	if r.ExcludeSubtype != "" {
-		query.Set("excludesubtype", string(r.ExcludeSubtype))
-	}
-	if len(r.IDs) != 0 {
-		var ids []string
-		for _, id := range r.IDs {
-			ids = append(ids, strconv.FormatInt(id, 10))
-		}
-		query.Set("id", strings.Join(ids, ","))
-	}
-	if r.Brief {
-		query.Set("brief", "1")
-	}
-	if r.Stats {
-		query.Set("stats", "1")
-	}
-
-	filters := map[string]*bool{
-		"own":        r.Own,
-		"rated":      r.Rated,
-		"played":     r.Played,
-		"comment":    r.Comment,
-		"trade":      r.Trade,
-		"want":       r.Want,
-		"wishlist":   r.Wishlist,
-		"preordered": r.Preordered,
-		"wanttoplay": r.WantToPlay,
-		"wanttobuy":  r.WantToBuy,
-		"prevowned":  r.PrevOwned,
-		"hasparts":   r.HasParts,
-		"wantparts":  r.WantParts,
-	}
-	for param, filter := range filters {
-		if filter == nil {
-			continue
-		}
-		if *filter {
-			query.Set(param, "1")
-		} else {
-			query.Set(param, "0")
-		}
-	}
-
-	if r.WishlistPriority > 0 {
-		query.Set("wishlistpriority", strconv.Itoa(r.WishlistPriority))
-	}
-	if r.MinRating > 0 {
-		query.Set("minrating", strconv.FormatFloat(r.MinRating, 'f', -1, 64))
-	}
-	if r.Rating > 0 {
-		query.Set("rating", strconv.FormatFloat(r.Rating, 'f', -1, 64))
-	}
-	if r.MinBGGRating > 0 {
-		query.Set("minbggrating", strconv.FormatFloat(r.MinBGGRating, 'f', -1, 64))
-	}
-	if r.BGGRating > 0 {
-		query.Set("bggrating", strconv.FormatFloat(r.BGGRating, 'f', -1, 64))
-	}
-	if r.MinPlays > 0 {
-		query.Set("minplays", strconv.Itoa(r.MinPlays))
-	}
-	if r.MaxPlays > 0 {
-		query.Set("maxplays", strconv.Itoa(r.MaxPlays))
-	}
-	if r.ShowPrivate {
-		query.Set("showprivate", "1")
-	}
-	if r.CollID > 0 {
-		query.Set("collid", strconv.FormatInt(r.CollID, 10))
-	}
-	if r.ModifiedSince != "" {
-		query.Set("modifiedsince", r.ModifiedSince)
-	}
-
-	return query.Encode()
+	ModifiedSince string `url:"modifiedsince,omitempty"`
 }
 
 // CollectionName differs from Name: the value is the element text rather than an attribute

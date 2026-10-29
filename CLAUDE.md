@@ -17,7 +17,7 @@ The goal is to build clean go structs and interfaces to simplify making API requ
     - Build clients with functional options: `NewClient(opts ...ClientOption)`, e.g. `NewClient(WithAuthToken(token))`.
       Options are `WithAuthToken` (sends `Authorization: Bearer <token>`), `WithHTTPClient`, `WithBaseURL` and `WithUserAgent`; Client fields stay unexported.
       New client settings get a `WithXxx` option rather than an exported field
-    - Every endpoint method goes through the unexported `Client.get(ctx, path, query, v)`, which builds and sends the request, checks the status and unmarshals the xml.
+    - Every endpoint method goes through the unexported `Client.get(ctx, path, opts, v)`, which encodes the request struct with `github.com/google/go-querystring`, sends it, checks the status and unmarshals the xml.
       `get` returns the public error types in errors.go: `*AcceptedError` (202), `*RateLimitError` (429, with `RetryAfter`) and `*ErrorResponse`.
       `*ErrorResponse` covers any other status and any 200 `<error>`/`<errors>`/non-xml body.
       Endpoint methods wrap errors with context (`fmt.Errorf("thread %d: %w", ...)`) so `errors.Is`/`errors.As` still work
@@ -33,16 +33,16 @@ The goal is to build clean go structs and interfaces to simplify making API requ
         - `/collection` returns `<errors><error><message>`, parsed by `collectionErrors`. GetCollection marks "Invalid username specified" as not found
         - `/user` is the exception: an unknown name is a 404
     - `/collection` returns HTTP 202 while BGG builds the collection. GetCollection returns an `*AcceptedError` that matches `ErrCollectionNotReady`, and leaves retrying to the caller
-    - Collection status filters are `*bool` (nil = no filter, true = include, false = exclude); build them with `boardgamegeek.Bool`
+    - Collection status filters are `*bool` (nil = no filter, true = include, false = exclude); build them with `boardgamegeek.Bool`. Tagged `int,omitempty`, go-querystring omits nil and sends 1/0
 4. Integration tests for each boardgamegeek api endpoint are written in integration_test
-    - Offline unit tests live in the root package (`go test .`). errors_test.go stubs BGG with `httptest` through `WithBaseURL`, for paths BGG can't produce on demand, such as 429
+    - Offline unit tests live in the root package (`go test .`). query_test.go checks each request struct's encoded query string. errors_test.go stubs BGG with `httptest` through `WithBaseURL`, for paths BGG can't produce on demand, such as 429
     - `integration_test/main_test.go` reads the BGG bearer token from the `BGG_API_TOKEN` env var in `TestMain` and fails fast if it is unset; build clients with `newTestClient()`
     - Run with `BGG_API_TOKEN=<token> go test ./integration_test/...`
     - `newTestClient()` shares one `http.Client` whose `throttledTransport` spaces every request 2s apart (5s for `/collection`, which is limited more tightly) to stay under BGG's rate limit (429 after ~40 requests in a burst)
 
 ## Adding a new boardgamegeek XMLAPI2 endpoint
 1. Create a file for the new endpoint
-2. Define XxxRequest struct and a toQuerString method
+2. Define an XxxRequest struct with `url:"..."` tags for every field (go-querystring): `comma` for lists, `int,omitempty` for flags BGG takes as 1/0, `omitempty` for optional params. Add the expected encoding to query_test.go
 3. Add response structs with `xml` tags taken from the API wiki. Optional sections are pointers so they come back nil when absent.
 4. Add a `Client` method that calls `bggClient.get` and maps any endpoint-specific "not found" error
 5. Add tests under `integration_test/`

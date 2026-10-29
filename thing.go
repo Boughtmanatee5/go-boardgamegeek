@@ -2,9 +2,6 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
-	"strconv"
-	"strings"
 )
 
 type ThingType string
@@ -19,70 +16,16 @@ const (
 )
 
 type GetThingsRequest struct {
-	IDs            []int64
-	Types          []ThingType
-	Versions       bool
-	Videos         bool
-	Stats          bool
-	MarketPlace    bool
-	Comments       bool
-	RatingComments bool
-	Page           int
-	PageSize       int
-}
-
-func (r *GetThingsRequest) toQueryString() string {
-	var ids []string
-	for _, id := range r.IDs {
-		ids = append(ids, strconv.FormatInt(id, 10))
-	}
-	query := fmt.Sprintf("id=%s", strings.Join(ids, ","))
-
-	if len(r.Types) != 0 {
-		typesQuery := "type="
-		for i, bggType := range r.Types {
-			if i == 0 {
-				typesQuery = fmt.Sprintf("%s%s", typesQuery, bggType)
-				continue
-			}
-			typesQuery = fmt.Sprintf("%s,%s", typesQuery, bggType)
-		}
-		query = fmt.Sprintf("%s&%s", query, typesQuery)
-	}
-
-	if r.Versions {
-		query = fmt.Sprintf("%s&versions=%d", query, 1)
-	}
-
-	if r.Videos {
-		query = fmt.Sprintf("%s&videos=%d", query, 1)
-	}
-
-	if r.Stats {
-		query = fmt.Sprintf("%s&stats=%d", query, 1)
-	}
-
-	if r.MarketPlace {
-		query = fmt.Sprintf("%s&marketplace=%d", query, 1)
-	}
-
-	if r.Comments {
-		query = fmt.Sprintf("%s&comments=%d", query, 1)
-	}
-
-	if r.RatingComments {
-		query = fmt.Sprintf("%s&ratingcomments=%d", query, 1)
-	}
-
-	if r.Page > 0 {
-		query = fmt.Sprintf("%s&page=%d", query, r.Page)
-	}
-
-	if r.PageSize > 0 {
-		query = fmt.Sprintf("%s&pagesize=%d", query, r.PageSize)
-	}
-
-	return query
+	IDs            []int64     `url:"id,comma"`
+	Types          []ThingType `url:"type,comma,omitempty"`
+	Versions       bool        `url:"versions,int,omitempty"`
+	Videos         bool        `url:"videos,int,omitempty"`
+	Stats          bool        `url:"stats,int,omitempty"`
+	MarketPlace    bool        `url:"marketplace,int,omitempty"`
+	Comments       bool        `url:"comments,int,omitempty"`
+	RatingComments bool        `url:"ratingcomments,int,omitempty"`
+	Page           int         `url:"page,omitempty"`
+	PageSize       int         `url:"pagesize,omitempty"`
 }
 
 type Statistics struct {

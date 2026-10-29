@@ -2,7 +2,6 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
 type GuildMemberSort string
@@ -13,30 +12,12 @@ const (
 )
 
 type GuildRequest struct {
-	ID      int64
-	Members bool
+	ID      int64 `url:"id"`
+	Members bool  `url:"members,int,omitempty"`
 	// Sort orders the members list, defaults to username
-	Sort GuildMemberSort
+	Sort GuildMemberSort `url:"sort,omitempty"`
 	// Page pages the members list, 25 members per page
-	Page int
-}
-
-func (r *GuildRequest) toQueryString() string {
-	query := fmt.Sprintf("id=%d", r.ID)
-
-	if r.Members {
-		query = fmt.Sprintf("%s&members=%d", query, 1)
-	}
-
-	if r.Sort != "" {
-		query = fmt.Sprintf("%s&sort=%s", query, r.Sort)
-	}
-
-	if r.Page > 0 {
-		query = fmt.Sprintf("%s&page=%d", query, r.Page)
-	}
-
-	return query
+	Page int `url:"page,omitempty"`
 }
 
 type GuildLocation struct {

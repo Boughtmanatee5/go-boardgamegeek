@@ -52,7 +52,7 @@ Phases 1–4 are internal or additive. The breaking changes are grouped into Pha
 ### Phase 4: Declarative query encoding
 - Replace each `toQueryString` with `url:"..."` struct tags encoded by `github.com/google/go-querystring`
   (`comma` for lists, `int` for 0/1 bools, `omitempty`).
-- Add a custom encoder for the collection `*bool` filters (nil is omitted, true/false become 1/0).
+- The collection `*bool` filters need no custom encoder: with `int,omitempty`, go-querystring omits nil and sends true/false as 1/0.
 - This fixes the search escaping bug.
 
 ### Phase 5: Services and naming (breaking)

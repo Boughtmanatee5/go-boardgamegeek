@@ -2,8 +2,6 @@ package boardgamegeek
 
 import (
 	"encoding/xml"
-	"fmt"
-	"net/url"
 )
 
 type UserDomain string
@@ -15,45 +13,15 @@ const (
 )
 
 type UserRequest struct {
-	Name    string
-	Buddies bool
-	Guilds  bool
-	Hot     bool
-	Top     bool
+	Name    string `url:"name"`
+	Buddies bool   `url:"buddies,int,omitempty"`
+	Guilds  bool   `url:"guilds,int,omitempty"`
+	Hot     bool   `url:"hot,int,omitempty"`
+	Top     bool   `url:"top,int,omitempty"`
 	// Domain selects which hot and top lists are returned, defaults to boardgame
-	Domain UserDomain
+	Domain UserDomain `url:"domain,omitempty"`
 	// Page pages the buddies and guilds lists
-	Page int
-}
-
-func (r *UserRequest) toQueryString() string {
-	query := fmt.Sprintf("name=%s", url.QueryEscape(r.Name))
-
-	if r.Buddies {
-		query = fmt.Sprintf("%s&buddies=%d", query, 1)
-	}
-
-	if r.Guilds {
-		query = fmt.Sprintf("%s&guilds=%d", query, 1)
-	}
-
-	if r.Hot {
-		query = fmt.Sprintf("%s&hot=%d", query, 1)
-	}
-
-	if r.Top {
-		query = fmt.Sprintf("%s&top=%d", query, 1)
-	}
-
-	if r.Domain != "" {
-		query = fmt.Sprintf("%s&domain=%s", query, r.Domain)
-	}
-
-	if r.Page > 0 {
-		query = fmt.Sprintf("%s&page=%d", query, r.Page)
-	}
-
-	return query
+	Page int `url:"page,omitempty"`
 }
 
 type UserBuddy struct {
