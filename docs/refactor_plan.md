@@ -15,7 +15,7 @@ The gaps are mostly in the transport layer (`client.go`), plus errors, the packa
 | Client construction | Injectable `*http.Client`, exported `BaseURL`, `UserAgent`, `WithAuthToken`. stripe-go adds `BackendConfig` (retries, logger) | `http.Client` stored by value and not injectable, hardcoded URL constant, no User-Agent, `oauth2.Token` used only to set one static header | Large |
 | Errors | Typed errors (`*ErrorResponse`, `*RateLimitError`, `*AcceptedError`) that work with `errors.As` | `fmt.Errorf` strings, so callers can't tell "not found" from a 429 or a 500 | Large |
 | Query encoding | Struct tags encoded by `go-querystring` (go-github) or a `form` encoder (stripe-go) | A hand-written `toQueryString` per request, mostly `fmt.Sprintf`. `SearchRequest` only escapes spaces, so `&` in a query breaks it | Medium (bug) |
-| API surface | Grouped services: `client.Repositories.Get`, `sc.V1Customers.Retrieve` | All methods sit directly on `Client` | Medium |
+| API surface | Grouped services: `client.Repositories.Get`, `sc.V1Customers.Retrieve` | All methods sit directly on `Client` | None (decided to keep flat methods) |
 | Return values | `(*T, *Response, error)`, where `*Response` exposes the status, headers and rate info | `(*T, error)` | Medium |
 | Pagination | Shared `ListOptions` and `NextPage` (go-github), iterators (stripe-go) | `Page`/`PageSize` repeated per request, no helper | Medium |
 | Rate limiting / retries | `MaxNetworkRetries` with backoff, rate-limit detection | None. The tests throttle with `time.Sleep` (~4 minute suite) | Medium |
@@ -27,7 +27,7 @@ Out of scope for this refactor but worth noting: `/plays` is not implemented, an
 
 ## Phases
 
-Phases 1–4 are internal or additive. The breaking changes are grouped into Phase 5 so they ship in one release.
+Phases 1, 3 and 4 kept the public API; Phase 2 changed `NewClient`. The remaining breaking changes are grouped into Phase 5 so they ship in one release.
 
 ### Phase 1: Shared request pipeline (no API change)
 - Add one unexported helper on `Client` that builds the URL, creates the request, sets auth,
@@ -55,14 +55,9 @@ Phases 1–4 are internal or additive. The breaking changes are grouped into Pha
 - The collection `*bool` filters need no custom encoder: with `int,omitempty`, go-querystring omits nil and sends true/false as 1/0.
 - This fixes the search escaping bug.
 
-### Phase 5: Services and naming (breaking)
-- go-github-style services, where each is `type XService service` and all share one `*Client`:
-  - `Things.Get` / `Things.Search` / `Things.Hot`
-  - `Families.Get`
-  - `Forums.List` / `Forums.Get` / `Forums.GetThread`
-  - `Users.Get`
-  - `Guilds.Get`
-  - `Collections.Get`
+### Phase 5: API naming (breaking)
+- Decision (2026-10-29): keep the endpoint methods directly on `Client` instead of go-github-style services.
+  BGG's API has only about 10 endpoints, so grouping them adds indirection without much benefit.
 - Rename the request types from `XxxRequest` to `XxxOptions`, and return `(*T, *Response, error)`.
 - Rename `Id` to `ID` and the constants to `ThingTypeBoardGame` style, and use short receivers.
 - Fix the module path/package name mismatch (rename the module, or move the code into a subdirectory).

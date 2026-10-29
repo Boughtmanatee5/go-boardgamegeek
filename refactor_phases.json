@@ -15,7 +15,7 @@
         "status": "done",
         "evidence": "2026-10-29T19:23:07Z go test ./integration_test/... -count=1: 73/73 passed (183.4s); go test . -count=1: all unit tests passed (6 error + 13 query encoding cases); golangci-lint run: 0 issues"
     },
-    "phase_5_services_and_naming": {
+    "phase_5_api_naming": {
         "status": "todo",
         "evidence": ""
     },
