@@ -5,7 +5,7 @@
     },
     "thing": {
         "status": "done",
-        "evidence": "I wrote it all integration tests passed"
+        "evidence": "2026-10-30T17:13:43Z go test -tags integration ./integration_test/... -count=1: 92/92 passed (thing tests cover every wiki section: details, links, polls, stats, versions, videos, marketplace, comments); go test ./...: passed; golangci-lint run: 0 issues"
     },
     "family_items": {
         "status": "done",

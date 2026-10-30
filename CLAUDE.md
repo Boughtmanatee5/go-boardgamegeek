@@ -39,7 +39,11 @@ The goal is to build clean go structs and interfaces to simplify making API requ
     - hot.go, user.go, guild.go, collection.go and plays.go cover `/hot`, `/user`, `/guild`, `/collection` and `/plays`
     - `ThingType` (thing.go) filters `/thing` and `/collection`. `SearchType` (search.go) filters `/search`: it repeats every thing type and adds types that are not things, such as `boardgamedesigner`
       (designers have their own ids; `/thing?id=2&type=boardgamedesigner` returns no items, while `/search` finds designer 2, Reiner Knizia)
-    - Shared element types live in search.go: `Name`, and `ValueAttr`, a string type whose `UnmarshalXML` reads the `value` attribute of any `<x value="..."/>` element. Use `ValueAttr` for those elements instead of a wrapper struct, and `*ValueAttr` when the element is optional
+    - Shared element types live in search.go: `Name`, `Link` (thing, version and family links, with `Inbound`), and the value-attribute types for `<x value="..."/>` elements:
+      `ValueAttr` (string), `IntValue` and `FloatValue`, whose `UnmarshalXML` reads the `value` attribute (an empty value is 0; a non-number is an error).
+      Use them instead of a wrapper struct, pick `IntValue`/`FloatValue` for counts, years, times and averages, keep `ValueAttr` for text and for values BGG sends unparsed (`"Not Ranked"`, `"2019-00-00"`), and use pointers when the element is optional
+    - thing.go: `Thing` covers every thing type; elements a type lacks are nil (player counts and polls for board games, `ReleaseDate` for video games, `SeriesCode` for RPG items, `DatePublished`/`IssueIndex` for RPG issues).
+      Video game "versions" are characters with only a canonical name
     - BGG often signals "not found" with HTTP 200:
         - `/forum` returns an HTML page (GetForum marks it with `markNotFound`)
         - `/thread` and `/guild` return `<error message="..."/>`, parsed by the shared `apiError` in errors.go

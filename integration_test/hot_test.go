@@ -43,7 +43,7 @@ func TestGetHotItemsPopulatesFields(t *testing.T) {
 	assert.NotEmpty(t, item.Name)
 	assert.NotEmpty(t, item.Thumbnail)
 	require.NotNil(t, item.YearPublished)
-	assert.NotEmpty(t, *item.YearPublished)
+	assert.Positive(t, int(*item.YearPublished))
 }
 
 func TestGetHotItemsByRPGType(t *testing.T) {

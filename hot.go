@@ -32,7 +32,7 @@ type HotItem struct {
 	Thumbnail ValueAttr `xml:"thumbnail"`
 	Name      ValueAttr `xml:"name"`
 	// Only present for game types, not people or companies
-	YearPublished *ValueAttr `xml:"yearpublished"`
+	YearPublished *IntValue `xml:"yearpublished"`
 }
 
 // HotItemsResponse is the response from GetHotItems

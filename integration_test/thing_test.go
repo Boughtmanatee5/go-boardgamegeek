@@ -3,6 +3,7 @@
 package integration_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/Boughtmanatee5/go-boardgamegeek"
@@ -29,7 +30,7 @@ func TestGetThingsByID(t *testing.T) {
 	assert.Equal(t, catanID, response.Items[0].ID)
 	assert.Equal(t, string(boardgamegeek.ThingTypeBoardGame), response.Items[0].Type)
 	require.NotNil(t, response.Items[0].YearPublished)
-	assert.Equal(t, "1995", string(*response.Items[0].YearPublished))
+	assert.EqualValues(t, 1995, *response.Items[0].YearPublished)
 }
 
 func TestGetThingsByMultipleIDs(t *testing.T) {
@@ -91,8 +92,18 @@ func TestGetThingsWithVersions(t *testing.T) {
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
-	assert.NotNil(t, response.Items[0].Versions)
-	assert.NotEmpty(t, response.Items[0].Versions.Items)
+	require.NotNil(t, response.Items[0].Versions)
+	require.NotEmpty(t, response.Items[0].Versions.Items)
+
+	for _, version := range response.Items[0].Versions.Items {
+		assert.Equal(t, "boardgameversion", version.Type)
+		assert.NotEmpty(t, version.Names)
+		require.NotEmpty(t, version.Links)
+		// every version links back to the thing it is a version of
+		assert.True(t, slices.ContainsFunc(version.Links, func(link *boardgamegeek.Link) bool {
+			return link.Type == "boardgameversion" && link.ID == catanID && link.Inbound
+		}), "version %d links to Catan", version.ID)
+	}
 }
 
 func TestGetThingsWithVideos(t *testing.T) {
@@ -105,8 +116,16 @@ func TestGetThingsWithVideos(t *testing.T) {
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
-	assert.NotNil(t, response.Items[0].Videos)
+	require.NotNil(t, response.Items[0].Videos)
 	assert.Greater(t, response.Items[0].Videos.Total, int64(0))
+	require.NotEmpty(t, response.Items[0].Videos.Videos)
+
+	for _, video := range response.Items[0].Videos.Videos {
+		assert.Positive(t, video.ID)
+		assert.NotEmpty(t, video.Title)
+		assert.NotEmpty(t, video.Link)
+		assert.False(t, video.PostDate.IsZero())
+	}
 }
 
 func TestGetThingsWithStats(t *testing.T) {
@@ -119,7 +138,82 @@ func TestGetThingsWithStats(t *testing.T) {
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
-	assert.NotNil(t, response.Items[0].Statistics)
+	require.NotNil(t, response.Items[0].Statistics)
+	ratings := response.Items[0].Statistics.Ratings
+	require.NotNil(t, ratings)
+	require.NotNil(t, ratings.UsersRated)
+	assert.Positive(t, int(*ratings.UsersRated))
+	require.NotNil(t, ratings.Average)
+	assert.InDelta(t, 7, float64(*ratings.Average), 1.5)
+	require.NotNil(t, ratings.AverageWeight)
+	assert.InDelta(t, 2.5, float64(*ratings.AverageWeight), 1.5)
+
+	require.NotEmpty(t, ratings.Ranks)
+	assert.Equal(t, "subtype", ratings.Ranks[0].Type)
+	assert.Equal(t, "boardgame", ratings.Ranks[0].Name)
+	assert.NotEmpty(t, ratings.Ranks[0].Value)
+}
+
+func TestGetThingsPopulatesBoardGameDetails(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	response, err := client.GetThings(ctx, &boardgamegeek.ThingsOptions{IDs: []int64{catanID}})
+	require.NoError(t, err)
+	require.Len(t, response.Items, 1)
+	item := response.Items[0]
+
+	assert.NotEmpty(t, item.Thumbnail)
+	assert.NotEmpty(t, item.Image)
+	assert.NotEmpty(t, item.Description)
+	assert.Equal(t, boardgamegeek.IntValue(3), *item.MinPlayers)
+	assert.Equal(t, boardgamegeek.IntValue(4), *item.MaxPlayers)
+	require.NotNil(t, item.PlayingTime)
+	assert.Positive(t, int(*item.PlayingTime))
+	require.NotNil(t, item.MinAge)
+	assert.Positive(t, int(*item.MinAge))
+
+	linkTypes := map[string]bool{}
+	for _, link := range item.Links {
+		linkTypes[link.Type] = true
+	}
+	for _, linkType := range []string{"boardgamecategory", "boardgamemechanic", "boardgamedesigner", "boardgamepublisher", "boardgameexpansion"} {
+		assert.True(t, linkTypes[linkType], "Catan has a %s link", linkType)
+	}
+
+	pollNames := map[string]bool{}
+	for _, poll := range item.Polls {
+		pollNames[poll.Name] = true
+		assert.Positive(t, poll.TotalVotes)
+		assert.NotEmpty(t, poll.Results)
+	}
+	assert.Equal(t, map[string]bool{"suggested_numplayers": true, "suggested_playerage": true, "language_dependence": true}, pollNames)
+	require.NotNil(t, item.PollSummary)
+	assert.NotEmpty(t, item.PollSummary.Results)
+}
+
+func TestGetThingsPopulatesRPGIssueDetails(t *testing.T) {
+	ctx := t.Context()
+	client := newTestClient()
+
+	// 140367 is an rpgissue: "& (Issue 1 - Summer 2012)"
+	response, err := client.GetThings(ctx, &boardgamegeek.ThingsOptions{IDs: []int64{140367}, Versions: true})
+	require.NoError(t, err)
+	require.Len(t, response.Items, 1)
+	item := response.Items[0]
+
+	require.NotNil(t, item.DatePublished)
+	assert.Equal(t, "2012-07-01", string(*item.DatePublished))
+	assert.Equal(t, boardgamegeek.IntValue(1), *item.IssueIndex)
+	assert.Nil(t, item.MinPlayers)
+	assert.Empty(t, item.Polls)
+
+	require.NotNil(t, item.Versions)
+	require.NotEmpty(t, item.Versions.Items)
+	version := item.Versions.Items[0]
+	require.NotNil(t, version.PageCount)
+	assert.Positive(t, int(*version.PageCount))
+	assert.NotNil(t, version.Format)
 }
 
 func TestGetThingsWithMarketPlace(t *testing.T) {
@@ -132,7 +226,16 @@ func TestGetThingsWithMarketPlace(t *testing.T) {
 
 	response, err := client.GetThings(ctx, request)
 	assert.NoError(t, err)
-	assert.NotNil(t, response.Items[0].MarketplaceListings)
+	require.NotNil(t, response.Items[0].MarketplaceListings)
+	require.NotEmpty(t, response.Items[0].MarketplaceListings.Listings)
+
+	for _, listing := range response.Items[0].MarketplaceListings.Listings {
+		require.NotNil(t, listing.Price)
+		assert.NotEmpty(t, listing.Price.Currency)
+		assert.NotEmpty(t, listing.Price.Value)
+		require.NotNil(t, listing.Link)
+		assert.NotEmpty(t, listing.Link.Href)
+	}
 }
 
 func TestGetThingsWithComments(t *testing.T) {

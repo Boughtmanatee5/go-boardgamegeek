@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Hand-written mock of thing?id=13&versions=1&videos=1&comments=1&marketplace=1: real videos, comments and listings belong to other users, so the users, text, prices and ids here are fictional --><items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse"><item type="boardgame" id="13">
+		<name type="primary" sortindex="1" value="CATAN" />
+		<yearpublished value="1995" />
+		<videos total="2">
+			<video id="3001" title="Mock how-to-play video" category="instructional" language="English" link="https://www.youtube.com/watch?v=example" username="examplevideographer" userid="4001" postdate="2026-10-26T09:23:09-05:00" />
+			<video id="3002" title="Mock review" category="review" language="Dutch" link="https://www.youtube.com/watch?v=example2" username="examplereviewer" userid="4002" postdate="2025-01-02T03:04:05-05:00" />
+		</videos>
+		<versions>
+			<item type="boardgameversion" id="5001">
+				<thumbnail>https://example.com/thumb.jpg</thumbnail>
+				<image>https://example.com/image.jpg</image>
+				<link type="boardgameversion" id="13" value="CATAN" inbound="true"/>
+				<link type="boardgamepublisher" id="6001" value="Example Publisher" />
+				<link type="language" id="2184" value="English" />
+				<name type="primary" value="Mock English edition" sortindex="1" />
+				<canonicalname value="Mock English edition" />
+				<yearpublished value="2020" />
+				<productcode value="EX-0001" />
+				<width value="11.5" />
+				<length value="11.5" />
+				<depth value="2.75" />
+				<weight value="2.4" />
+			</item>
+		</versions>
+		<comments page="1" totalitems="2">
+			<comment username="examplecommenter" rating="8" value="Mock comment" />
+			<comment username="examplerater" rating="N/A" value="" />
+		</comments>
+		<marketplacelistings>
+			<listing>
+				<listdate value="Thu, 19 Jan 2006 22:08:15 +0000" />
+				<price currency="EUR" value="90.00" />
+				<condition value="likenew" />
+				<notes value="Mock listing notes" />
+				<link href="https://boardgamegeek.com/market/product/1" title="marketlisting" />
+			</listing>
+		</marketplacelistings>
+	</item>
+</items>
