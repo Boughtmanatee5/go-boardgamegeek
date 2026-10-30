@@ -9,13 +9,6 @@ import (
 // the collection request (HTTP 202). Retry the same request after a few seconds.
 var ErrCollectionNotReady = errors.New("collection request queued by boardgamegeek, retry later")
 
-// Bool returns a pointer to b, for the optional filters on CollectionOptions.
-//
-//go:fix inline
-func Bool(b bool) *bool {
-	return new(b)
-}
-
 // CollectionOptions are the parameters for GetCollection
 type CollectionOptions struct {
 	// Username is required
@@ -27,7 +20,7 @@ type CollectionOptions struct {
 	// Brief returns only the name and status of each item
 	Brief bool `url:"brief,int,omitempty"`
 	Stats bool `url:"stats,int,omitempty"`
-	// Status filters: nil means no filter, true includes only matching items, false excludes them
+	// Status filters: nil means no filter, new(true) includes only matching items, new(false) excludes them
 	Own        *bool `url:"own,int,omitempty"`
 	Rated      *bool `url:"rated,int,omitempty"`
 	Played     *bool `url:"played,int,omitempty"`
