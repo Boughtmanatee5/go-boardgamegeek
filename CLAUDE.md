@@ -71,15 +71,19 @@ The goal is to build clean go structs and interfaces to simplify making API requ
 ## Definition of Done
 1. `golangci-lint run` passes with no errors
 2. All unit tests (`go test ./...`) and integration tests (`go test -tags integration ./integration_test/...`) pass without errors
-3. The feature appears in `feature.json` with status `"done"` and evidence (time stamp the test command was run).
+3. The feature appears in `features.json` with status `"done"` and evidence (time stamp the test command was run).
 4. The Architecture section of this document is updated to reflect any changes in architecture
 
-## Refactor
-`docs/refactor_plan.md` describes a phased refactor toward go-github/stripe-go conventions. Track phase status in `refactor_phases.json` using the same Definition of Done.
+## Design decisions
+These were settled during the refactor toward go-github/stripe-go conventions; don't re-propose them without a new reason.
+- Endpoint methods live directly on `Client`, not in go-github-style services. BGG has only about 10 endpoints, so grouping them adds indirection without much benefit
+- Methods return `(*T, error)`, not `(*T, *Response, error)`. BGG returns paging in the xml body and sends no rate-limit headers, and the typed errors already carry the `*http.Response`
+- The module is `github.com/Boughtmanatee5/go-boardgamegeek` and the package is `boardgamegeek` (the go-github convention)
+- There is no shared `ListOptions{Page, PageSize}`. Only `/thing` accepts `pagesize`, so a shared struct would add a field BGG ignores to the forum, guild and user options
 
 ## Session Handoff
-
-When resuming work, read `session-handoff.md` for context from the previous session. When finishing a session, update it with:
+`session-handoff.md` is an optional, local notes file (it is git-ignored, so it is not shared with other contributors).
+If it exists, read it when resuming work for context from the previous session. When finishing a session, update it with:
 
 - What was accomplished
 - What remains

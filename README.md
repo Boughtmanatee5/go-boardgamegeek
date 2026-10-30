@@ -78,6 +78,8 @@ Space requests out, for example with a throttling `http.RoundTripper` passed thr
 
 ## Development
 
+The integration tests call the live API and read your token from `BGG_API_TOKEN`. Copy `.env.example` to `.env` (git-ignored) to keep it locally.
+
 ```sh
 go test ./...                                                       # offline unit tests
 BGG_API_TOKEN=<token> go test -tags integration ./integration_test/... # live tests, ~4 minutes
