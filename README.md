@@ -1,5 +1,7 @@
 # go-boardgamegeek
 
+[![CI](https://github.com/Boughtmanatee5/go-boardgamegeek/actions/workflows/ci.yml/badge.svg)](https://github.com/Boughtmanatee5/go-boardgamegeek/actions/workflows/ci.yml)
+
 A Go client for the [BoardGameGeek XML API2](https://boardgamegeek.com/wiki/page/BGG_XML_API2).
 
 ```sh
@@ -80,6 +82,7 @@ Space requests out, for example with a throttling `http.RoundTripper` passed thr
 ## Development
 
 The integration tests call the live API and read your token from `BGG_API_TOKEN`. Copy `.env.example` to `.env` (git-ignored) to keep it locally.
+CI runs lint and the unit tests only; run the integration tests yourself before sending a change to an endpoint.
 
 ```sh
 go test ./...                                                       # offline unit tests

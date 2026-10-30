@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # .golangci.yml sets the integration build tag, so integration_test/ is linted but never run
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15.0
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # the minimum version go.mod promises, and the latest release
+        go: ["1.26", stable]
+    name: test (go ${{ matrix.go }})
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Check go.mod and go.sum are tidy
+        run: go mod tidy -diff
+      # Unit tests only. The integration tests call the live BGG API and need -tags integration and
+      # BGG_API_TOKEN; never run them in CI, where repeated runs could get the token rate limited or revoked.
+      - name: Test
+        run: go test -race ./...

@@ -64,6 +64,8 @@ The goal is to build clean go structs and interfaces to simplify making API requ
     - Integration tests for each boardgamegeek api endpoint are written in integration_test, behind the `//go:build integration` tag. .golangci.yml sets that build tag so they are still linted
     - `integration_test/main_test.go` reads the BGG bearer token from the `BGG_API_TOKEN` env var in `TestMain` and fails fast if it is unset; build clients with `newTestClient(opts...)`, which takes extra client options
     - Run with `BGG_API_TOKEN=<token> go test -tags integration ./integration_test/...`
+    - CI (.github/workflows/ci.yml) runs golangci-lint, `go mod tidy -diff` and `go test -race ./...` on Go 1.26 and stable, for pushes to main and pull requests.
+      Never add the integration tests to CI: repeated live runs could get the BGG token rate limited or revoked. Keep the lint action's golangci-lint version in step with the local one
     - Collection tests use `WithMaxRetries` to wait out BGG's 202s, which exercises the retry path live
     - `newTestClient()` shares one `http.Client` whose `throttledTransport` spaces every request 2s apart (5s for `/collection`, which is limited more tightly) to stay under BGG's rate limit (429 after ~40 requests in a burst)
 
