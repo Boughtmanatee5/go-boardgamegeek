@@ -89,3 +89,24 @@ go test ./...                                                       # offline un
 BGG_API_TOKEN=<token> go test -tags integration ./integration_test/... # live tests, ~4 minutes
 golangci-lint run
 ```
+
+## Contributing
+
+Contributions are welcome. Please open an issue before starting on anything large.
+
+### Issues
+
+Open issues from one of the templates so they are labelled:
+
+- **Bug report** (`bug`): something is broken or a response fails to parse. Include the request (endpoint and parameters), the library version and what you expected.
+- **Feature request** (`enhancement`): something new, such as an endpoint, field or client option.
+- **Improvement** (`enhancement`): a change to existing behaviour, docs or performance.
+
+### Pull requests
+
+PRs must be submitted from a fork of this repository; branches are not accepted on the main repository itself.
+
+1. Fork the repository and create a branch from `main`.
+2. Make your change, following the conventions in [CLAUDE.md](CLAUDE.md): `XxxOptions`/`XxxResponse` naming, upper-case initialisms and a doc comment on every exported identifier.
+3. Run `golangci-lint run` and `go test ./...`. If you changed an endpoint, run the integration tests as well (see [Development](#development)).
+4. Open a PR against `main`, link the issue it addresses and say which tests you ran.

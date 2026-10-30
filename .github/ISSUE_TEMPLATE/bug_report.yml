@@ -1,0 +1,38 @@
+name: Bug report
+description: Something is broken or a BGG response fails to parse
+labels: [bug]
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: Request
+      description: "The endpoint and options you called, e.g. `GetThings` with `ThingsOptions{IDs: []int64{13}, Stats: true}`"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: The error or wrong value, and the raw BGG response if you have it
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      placeholder: go1.26.0
+    validations:
+      required: true

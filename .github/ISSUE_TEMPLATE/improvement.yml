@@ -1,0 +1,16 @@
+name: Improvement
+description: A change to existing behaviour, docs or performance
+labels: [enhancement]
+body:
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
