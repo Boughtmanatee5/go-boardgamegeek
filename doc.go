@@ -11,7 +11,7 @@
 //	resp, err := client.Search(ctx, &boardgamegeek.SearchOptions{Query: "Catan"})
 //
 // Each endpoint has a Client method that takes an XxxOptions struct and returns an XxxResponse.
-// Paged lists (forum threads, guild members, user buddies and guilds, thing comments) also have
+// Paged lists (forum threads, guild members, user buddies and guilds, thing comments, plays) also have
 // AllXxx methods that return an iter.Seq2 and request pages as the loop needs them.
 //
 // # Errors

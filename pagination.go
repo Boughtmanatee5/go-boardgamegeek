@@ -125,3 +125,16 @@ func (c *Client) AllThingComments(ctx context.Context, opts *ThingsOptions) iter
 		return comments.Comments, int(comments.TotalItems), nil
 	})
 }
+
+// AllPlays yields every play matching opts, starting at opts.Page
+func (c *Client) AllPlays(ctx context.Context, opts *PlaysOptions) iter.Seq2[*Play, error] {
+	return paginate(ctx, opts.Page, func(ctx context.Context, page int) ([]*Play, int, error) {
+		pageOpts := *opts
+		pageOpts.Page = page
+		resp, err := c.GetPlays(ctx, &pageOpts)
+		if err != nil {
+			return nil, 0, err
+		}
+		return resp.Plays, resp.Total, nil
+	})
+}

@@ -163,3 +163,64 @@ func TestGetCollectionParsesFixture(t *testing.T) {
 	assert.NotNil(t, item.Stats)
 	assert.NotNil(t, item.Status)
 }
+
+// plays?username=Aldie&mindate=2026-08-01&maxdate=2026-10-31
+func TestGetPlaysParsesFixture(t *testing.T) {
+	resp, err := newFixtureClient(t).GetPlays(t.Context(), &boardgamegeek.PlaysOptions{Username: "Aldie"})
+	require.NoError(t, err)
+
+	assert.Equal(t, "Aldie", resp.Username)
+	assert.EqualValues(t, 688, resp.UserID)
+	assert.Equal(t, 7, resp.Total)
+	assert.Equal(t, 1, resp.Page)
+	require.Len(t, resp.Plays, 7)
+
+	play := resp.Plays[0]
+	assert.EqualValues(t, 119593167, play.ID)
+	assert.Equal(t, "2026-10-09", play.Date)
+	assert.Equal(t, 5, play.Quantity)
+	assert.False(t, play.Incomplete)
+	require.NotNil(t, play.Item)
+	assert.Equal(t, "Dice Conquest", play.Item.Name)
+	assert.Equal(t, "thing", play.Item.ObjectType)
+	assert.EqualValues(t, 354866, play.Item.ObjectID)
+	assert.Equal(t, []boardgamegeek.ValueAttr{"boardgame"}, play.Item.Subtypes)
+	assert.Empty(t, play.Players)
+}
+
+// testdata/plays_players.xml is a hand-written mock in the shape of plays?id=13&type=thing,
+// since real responses by thing list other users' plays
+func TestGetPlaysParsesPlayersMock(t *testing.T) {
+	body, err := os.ReadFile(filepath.Join("testdata", "plays_players.xml"))
+	require.NoError(t, err)
+	client := newStubClient(t, http.StatusOK, xmlHeader(), string(body))
+
+	resp, err := client.GetPlays(t.Context(), &boardgamegeek.PlaysOptions{ID: 13, Type: boardgamegeek.PlaysTypeThing})
+	require.NoError(t, err)
+
+	assert.Empty(t, resp.Username)
+	require.Len(t, resp.Plays, 2)
+
+	play := resp.Plays[0]
+	assert.EqualValues(t, 2001, play.UserID)
+	assert.Equal(t, 75, play.Length)
+	assert.Equal(t, "Example Game Cafe", play.Location)
+	assert.Equal(t, "Mock comment with a #hashtag", play.Comments)
+	require.Len(t, play.Players, 2)
+	assert.Equal(t, boardgamegeek.Player{
+		XMLName:       play.Players[0].XMLName,
+		Username:      "examplelogger",
+		UserID:        2001,
+		Name:          "Alex Example",
+		StartPosition: "start player",
+		Color:         "Red",
+		Score:         "10",
+		Rating:        7,
+		Win:           true,
+	}, *play.Players[0])
+	assert.True(t, play.Players[1].New)
+	assert.Empty(t, play.Players[1].Score)
+
+	assert.True(t, resp.Plays[1].Incomplete)
+	assert.Empty(t, resp.Plays[1].Players)
+}

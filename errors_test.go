@@ -97,3 +97,34 @@ func TestHTMLIsErrNotFoundOnlyForForum(t *testing.T) {
 	assert.ErrorAs(t, err, &errResp)
 	assert.False(t, errors.Is(err, boardgamegeek.ErrNotFound))
 }
+
+func TestPlaysMessageBoxMatchesErrNotFound(t *testing.T) {
+	body := "<?xml version=\"1.0\" encoding=\"utf-8\"?>\t<div class='messagebox error'>\n\t\tInvalid object or user\n\t</div>"
+	client := newStubClient(t, http.StatusOK, xmlHeader(), body)
+
+	_, err := client.GetPlays(t.Context(), &boardgamegeek.PlaysOptions{Username: "nobody"})
+	var errResp *boardgamegeek.ErrorResponse
+	require.ErrorAs(t, err, &errResp)
+	assert.Equal(t, "Invalid object or user", errResp.Message)
+	assert.ErrorIs(t, err, boardgamegeek.ErrNotFound)
+}
+
+func TestMessageBoxIsErrNotFoundOnlyForPlays(t *testing.T) {
+	client := newStubClient(t, http.StatusOK, xmlHeader(), "<div class='messagebox error'>Invalid object or user</div>")
+
+	_, err := client.Search(t.Context(), &boardgamegeek.SearchOptions{Query: "x"})
+	var errResp *boardgamegeek.ErrorResponse
+	require.ErrorAs(t, err, &errResp)
+	assert.False(t, errors.Is(err, boardgamegeek.ErrNotFound))
+}
+
+func TestPlaysWithoutUserOrIDFailsBeforeRequest(t *testing.T) {
+	// BGG would answer <error message='Not Found'/>; GetPlays must not send the request or report not found
+	client := newStubClient(t, http.StatusOK, xmlHeader(), `<error message="Not Found" />`)
+
+	_, err := client.GetPlays(t.Context(), &boardgamegeek.PlaysOptions{Subtype: boardgamegeek.ThingTypeBoardGame})
+	require.Error(t, err)
+	var errResp *boardgamegeek.ErrorResponse
+	assert.False(t, errors.As(err, &errResp))
+	assert.False(t, errors.Is(err, boardgamegeek.ErrNotFound))
+}

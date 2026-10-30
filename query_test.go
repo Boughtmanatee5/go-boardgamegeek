@@ -2,6 +2,7 @@ package boardgamegeek
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/go-querystring/query"
 	"github.com/stretchr/testify/assert"
@@ -91,6 +92,23 @@ func TestRequestQueryEncoding(t *testing.T) {
 				IDs:       []int64{1, 2},
 			},
 			want: "id=1%2C2&minrating=7.5&own=1&username=Aldie&wishlist=0",
+		},
+		{
+			name:    "plays by user omits zero dates",
+			request: &PlaysOptions{Username: "Aldie"},
+			want:    "username=Aldie",
+		},
+		{
+			name: "plays by thing with dates, subtype and page",
+			request: &PlaysOptions{
+				ID:      13,
+				Type:    PlaysTypeThing,
+				MinDate: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				MaxDate: time.Date(2026, 6, 30, 0, 0, 0, 0, time.UTC),
+				Subtype: ThingTypeBoardGameExpansion,
+				Page:    2,
+			},
+			want: "id=13&maxdate=2026-06-30&mindate=2026-01-01&page=2&subtype=boardgameexpansion&type=thing",
 		},
 	}
 

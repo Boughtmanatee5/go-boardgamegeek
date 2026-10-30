@@ -88,3 +88,16 @@ func TestAllThingCommentsSpansPages(t *testing.T) {
 	}
 	assert.Len(t, usernames, 25, "no comment is repeated across pages")
 }
+
+func TestAllPlaysSpansPages(t *testing.T) {
+	client := newTestClient()
+
+	plays := take(t, client.AllPlays(t.Context(), &boardgamegeek.PlaysOptions{Username: aldieUsername}), 150)
+	require.Len(t, plays, 150, "Aldie has more than one page of plays")
+
+	ids := map[int64]bool{}
+	for _, play := range plays {
+		ids[play.ID] = true
+	}
+	assert.Len(t, ids, 150, "no play is repeated across pages")
+}

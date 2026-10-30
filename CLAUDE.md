@@ -24,19 +24,19 @@ The goal is to build clean go structs and interfaces to simplify making API requ
       New client settings get a `WithXxx` option rather than an exported field
     - Every endpoint method goes through the unexported `Client.get(ctx, path, opts, v)`, which encodes the request struct with `github.com/google/go-querystring`, sends it, checks the status and unmarshals the xml.
       `get` returns the public error types in errors.go: `*AcceptedError` (202), `*RateLimitError` (429, with `RetryAfter`) and `*ErrorResponse`.
-      `*ErrorResponse` covers any other status and any 200 `<error>`/`<errors>`/non-xml body.
+      `*ErrorResponse` covers any other status and any 200 `<error>`/`<errors>`/messagebox/non-xml body.
       Endpoint methods wrap errors with context (`fmt.Errorf("thread %d: %w", ...)`) so `errors.Is`/`errors.As` still work
     - `ErrNotFound` matches every not-found shape through `ErrorResponse.Is`. `get` marks 404s and `<error>` documents.
       Endpoints mark their own quirks with `markNotFound`, so an unrelated html page or validation error is not reported as not found
     - `get` encodes the query and loops over `do`, which sends a single request. With `WithMaxRetries(n)`, a 202 or 429 is retried up to n times.
       The wait is `Retry-After` when sent, else backoff from 2s (`retryWait`) doubling to 1 minute, and the wait stops when ctx is done. The default is no retries
-    - pagination.go holds the generic `paginate` helper and the `AllXxx` iterators (`AllForumThreads`, `AllGuildMembers`, `AllUserBuddies`, `AllUserGuilds`, `AllThingComments`), which return `iter.Seq2[*T, error]`.
+    - pagination.go holds the generic `paginate` helper and the `AllXxx` iterators (`AllForumThreads`, `AllGuildMembers`, `AllUserBuddies`, `AllUserGuilds`, `AllThingComments`, `AllPlays`), which return `iter.Seq2[*T, error]`.
       `paginate` stops on an empty or short page, on reaching BGG's reported total, or on the first error. Each page copies opts, so the caller's options are never mutated.
       There is no shared `ListOptions`: only `/thing` accepts `pagesize`, so each options struct keeps its own `Page`
     - doc.go is the package overview. Every exported identifier needs a doc comment (enforced by revive's `exported` rule in .golangci.yml)
 3. Each boardgamegeek entity has its own file. E.g. search.go, thing.go and family_item.go contain definitions for the SearchItem, Thing and FamilyItem entities
     - forum.go covers both `/forumlist` (ForumListOptions/ForumListResponse) and `/forum` (ForumOptions/ForumResponse); thread.go covers `/thread`
-    - hot.go, user.go, guild.go and collection.go cover `/hot`, `/user`, `/guild` and `/collection`
+    - hot.go, user.go, guild.go, collection.go and plays.go cover `/hot`, `/user`, `/guild`, `/collection` and `/plays`
     - `ThingType` (thing.go) filters `/thing` and `/collection`. `SearchType` (search.go) filters `/search`: it repeats every thing type and adds types that are not things, such as `boardgamedesigner`
       (designers have their own ids; `/thing?id=2&type=boardgamedesigner` returns no items, while `/search` finds designer 2, Reiner Knizia)
     - Shared element types live in search.go: `Name`, and `ValueAttr`, a string type whose `UnmarshalXML` reads the `value` attribute of any `<x value="..."/>` element. Use `ValueAttr` for those elements instead of a wrapper struct, and `*ValueAttr` when the element is optional
@@ -44,12 +44,15 @@ The goal is to build clean go structs and interfaces to simplify making API requ
         - `/forum` returns an HTML page (GetForum marks it with `markNotFound`)
         - `/thread` and `/guild` return `<error message="..."/>`, parsed by the shared `apiError` in errors.go
         - `/collection` returns `<errors><error><message>`, parsed by `collectionErrors`. GetCollection marks "Invalid username specified" as not found
+        - `/plays` returns an xml declaration followed by `<div class='messagebox error'>Invalid object or user</div>`, parsed by `messageBox` in plays.go. GetPlays marks it as not found.
+          With neither username nor id, `/plays` returns `<error message='Not Found'/>`, so GetPlays rejects that request itself rather than report it as not found
         - `/user` is the exception: an unknown name is a 404
     - `/collection` returns HTTP 202 while BGG builds the collection. GetCollection returns an `*AcceptedError` that matches `ErrCollectionNotReady`; callers retry themselves or set `WithMaxRetries`
     - Collection status filters are `*bool` (nil = no filter, true = include, false = exclude); build them with `new(true)` / `new(false)` (Go 1.26). Tagged `int,omitempty`, go-querystring omits nil and sends 1/0
 4. Tests
     - Offline unit tests live in the root package and run with `go test ./...` (no token needed):
-        - endpoints_test.go parses real BGG responses saved in `testdata/<endpoint>.xml` (each test notes the request it was captured with). Re-capture a fixture when a response struct changes
+        - endpoints_test.go parses real BGG responses saved in `testdata/<endpoint>.xml` (each test notes the request it was captured with). Re-capture a fixture when a response struct changes.
+          Don't commit fixtures holding other users' records (e.g. `/plays` by thing); hand-write a mock with fictional data instead, like `testdata/plays_players.xml`
         - query_test.go checks each options struct's encoded query string
         - errors_test.go and retry_test.go stub BGG with `httptest` through `WithBaseURL`, for paths BGG can't produce on demand, such as 429
         - pagination_test.go covers `paginate`'s stop conditions

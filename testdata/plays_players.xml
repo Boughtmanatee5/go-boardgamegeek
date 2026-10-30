@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Hand-written mock of /plays?id=13&type=thing: real responses list other users' plays, so the players, comments and ids here are fictional --><plays total="2" page="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+<play id="1001" userid="2001" date="2026-10-01" quantity="1" length="75" incomplete="0" nowinstats="0" location="Example Game Cafe">
+			<item name="CATAN" objecttype="thing" objectid="13">
+				<subtypes>
+										<subtype value="boardgame" />
+									</subtypes>
+			</item>
+						<comments>Mock comment with a #hashtag</comments>
+									<players>
+									<player username="examplelogger" userid="2001" name="Alex Example" startposition="start player" color="Red" score="10" new="0" rating="7" win="1" />
+									<player username="" userid="0" name="Sam Sample" startposition="2" color="Blue" score="" new="1" rating="0" win="0" />
+							</players>
+					</play>
+	<play id="1002" userid="2002" date="2026-10-02" quantity="2" length="0" incomplete="1" nowinstats="0" location="">
+			<item name="CATAN" objecttype="thing" objectid="13">
+				<subtypes>
+										<subtype value="boardgame" />
+									</subtypes>
+			</item>
+								</play>
+	</plays>

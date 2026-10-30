@@ -142,7 +142,7 @@ func (c *Client) retryDelay(err error, attempt int) (time.Duration, bool) {
 
 // do sends one request for reqURL and unmarshals the xml body into v.
 // It returns *AcceptedError for 202, *RateLimitError for 429 and *ErrorResponse for any other
-// non-200 status or for a 200 <error>/<errors> document or non-xml body. 404s and <error>
+// non-200 status or for a 200 <error>/<errors> document, messagebox error or non-xml body. 404s and <error>
 // documents match ErrNotFound; endpoints mark their own not-found quirks with markNotFound.
 func (c *Client) do(ctx context.Context, reqURL *url.URL, v any) error {
 	req, reqErr := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
@@ -190,6 +190,11 @@ func (c *Client) do(ctx context.Context, reqURL *url.URL, v any) error {
 	var collectionErrs collectionErrors
 	if xml.Unmarshal(body, &collectionErrs) == nil {
 		return &ErrorResponse{Response: resp, Message: strings.Join(collectionErrs.Messages, "; ")}
+	}
+
+	var msgBox messageBox
+	if xml.Unmarshal(body, &msgBox) == nil && strings.Contains(msgBox.Class, "error") {
+		return &ErrorResponse{Response: resp, Message: strings.TrimSpace(msgBox.Message)}
 	}
 
 	if parseErr := xml.Unmarshal(body, v); parseErr != nil {
@@ -305,4 +310,26 @@ func (c *Client) GetCollection(ctx context.Context, opts *CollectionOptions) (*C
 		return nil, fmt.Errorf("collection for %s: %w", opts.Username, err)
 	}
 	return &collectionResponse, nil
+}
+
+// errPlaysTarget is returned by GetPlays when PlaysOptions names neither a user nor an object
+var errPlaysTarget = errors.New("plays: PlaysOptions needs a Username or an ID")
+
+// GetPlays returns logged plays for a user, a thing or family, or one user's plays of a thing (/plays).
+// An unknown username or id returns an error matching ErrNotFound.
+func (c *Client) GetPlays(ctx context.Context, opts *PlaysOptions) (*PlaysResponse, error) {
+	// without a user or object BGG answers <error message='Not Found'/>, which would read as not found
+	if opts.Username == "" && opts.ID == 0 {
+		return nil, errPlaysTarget
+	}
+
+	var playsResponse PlaysResponse
+	if err := c.get(ctx, "/plays", opts, &playsResponse); err != nil {
+		// BGG responds to an unknown user or object with a 200 messagebox error
+		err = markNotFound(err, func(e *ErrorResponse) bool {
+			return strings.Contains(e.Message, "Invalid object or user")
+		})
+		return nil, fmt.Errorf("plays: %w", err)
+	}
+	return &playsResponse, nil
 }

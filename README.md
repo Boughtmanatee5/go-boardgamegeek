@@ -47,6 +47,7 @@ resp, err := client.GetThings(ctx, &boardgamegeek.ThingsOptions{IDs: []int64{13}
 | `/user` | `GetUser` | `AllUserBuddies`, `AllUserGuilds` |
 | `/guild` | `GetGuild` | `AllGuildMembers` |
 | `/collection` | `GetCollection` | |
+| `/plays` | `GetPlays` | `AllPlays` |
 
 The iterators return an `iter.Seq2` and request pages as the loop needs them:
 

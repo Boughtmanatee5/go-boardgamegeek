@@ -10,7 +10,8 @@ import (
 )
 
 // ErrNotFound matches, with errors.Is, every way BGG reports a missing entity:
-// a 404, a 200 <error> document, /forum's html page and /collection's invalid username error
+// a 404, a 200 <error> document, /forum's html page, /collection's invalid username error
+// and /plays' invalid object or user message
 var ErrNotFound = errors.New("boardgamegeek: not found")
 
 // ErrorResponse is returned when BGG rejects a request, either with a non-200 status
