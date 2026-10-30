@@ -309,29 +309,8 @@ func TestGetCollectionParsesFixture(t *testing.T) {
 	assert.NotNil(t, item.Status)
 }
 
-// plays?username=Aldie&mindate=2026-08-01&maxdate=2026-10-31
-func TestGetPlaysParsesFixture(t *testing.T) {
-	resp, err := newFixtureClient(t).GetPlays(t.Context(), &boardgamegeek.PlaysOptions{Username: "Aldie"})
-	require.NoError(t, err)
-
-	assert.Equal(t, "Aldie", resp.Username)
-	assert.EqualValues(t, 688, resp.UserID)
-	assert.Equal(t, 7, resp.Total)
-	assert.Equal(t, 1, resp.Page)
-	require.Len(t, resp.Plays, 7)
-
-	play := resp.Plays[0]
-	assert.EqualValues(t, 119593167, play.ID)
-	assert.Equal(t, "2026-10-09", play.Date)
-	assert.Equal(t, 5, play.Quantity)
-	assert.False(t, play.Incomplete)
-	require.NotNil(t, play.Item)
-	assert.Equal(t, "Dice Conquest", play.Item.Name)
-	assert.Equal(t, "thing", play.Item.ObjectType)
-	assert.EqualValues(t, 354866, play.Item.ObjectID)
-	assert.Equal(t, []boardgamegeek.ValueAttr{"boardgame"}, play.Item.Subtypes)
-	assert.Empty(t, play.Players)
-}
+// TODO: capture the maintainer's own plays into testdata/plays.xml (plays?username=<maintainer>&mindate=...&maxdate=...)
+// and add TestGetPlaysParsesFixture back. The previous fixture held another user's plays, so it was removed.
 
 // testdata/plays_players.xml is a hand-written mock in the shape of plays?id=13&type=thing,
 // since real responses by thing list other users' plays
