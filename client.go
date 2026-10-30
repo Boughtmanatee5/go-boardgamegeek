@@ -126,16 +126,14 @@ func (c *Client) retryDelay(err error, attempt int) (time.Duration, bool) {
 
 	backoff := min(c.retryWait<<attempt, maxRetryWait)
 
-	var rateLimitErr *RateLimitError
-	if errors.As(err, &rateLimitErr) {
+	if rateLimitErr, ok := errors.AsType[*RateLimitError](err); ok {
 		if rateLimitErr.RetryAfter > 0 {
 			return rateLimitErr.RetryAfter, true
 		}
 		return backoff, true
 	}
 
-	var acceptedErr *AcceptedError
-	if errors.As(err, &acceptedErr) {
+	if _, ok := errors.AsType[*AcceptedError](err); ok {
 		return backoff, true
 	}
 
@@ -203,8 +201,7 @@ func (c *Client) do(ctx context.Context, reqURL *url.URL, v any) error {
 
 // markNotFound makes err match ErrNotFound if it is an *ErrorResponse that notFound reports on
 func markNotFound(err error, notFound func(*ErrorResponse) bool) error {
-	var errResp *ErrorResponse
-	if errors.As(err, &errResp) && notFound(errResp) {
+	if errResp, ok := errors.AsType[*ErrorResponse](err); ok && notFound(errResp) {
 		errResp.notFound = true
 	}
 	return err

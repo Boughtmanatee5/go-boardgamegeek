@@ -2,6 +2,7 @@ package boardgamegeek_test
 
 import (
 	"errors"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -19,9 +20,7 @@ import (
 func newStubClient(t *testing.T, status int, header http.Header, body string) *boardgamegeek.Client {
 	t.Helper()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		for key, values := range header {
-			w.Header()[key] = values
-		}
+		maps.Copy(w.Header(), header)
 		w.WriteHeader(status)
 		_, _ = w.Write([]byte(body))
 	}))

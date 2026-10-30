@@ -11,7 +11,7 @@ This is a go client to interface with boardgamegeek.com's api xmlapi2.
 The goal is to build clean go structs and interfaces to simplify making API requests to boardgamegeek.
 
 ## Architecture
-0. The module is `github.com/Boughtmanatee5/go-boardgamegeek` and the package is `boardgamegeek`, so callers import it without an alias.
+0. The module targets Go 1.26 (go.mod `go 1.26.6`) so older toolchains can use it; prefer stdlib features up to 1.26 (`errors.AsType`, `new(expr)`). The module is `github.com/Boughtmanatee5/go-boardgamegeek` and the package is `boardgamegeek`, so callers import it without an alias.
    Naming follows Go conventions:
     - request params are `XxxOptions` and responses `XxxResponse`; methods return `(*XxxResponse, error)`
     - initialisms are upper case (`ID`, `CollID`)
@@ -46,7 +46,7 @@ The goal is to build clean go structs and interfaces to simplify making API requ
         - `/collection` returns `<errors><error><message>`, parsed by `collectionErrors`. GetCollection marks "Invalid username specified" as not found
         - `/user` is the exception: an unknown name is a 404
     - `/collection` returns HTTP 202 while BGG builds the collection. GetCollection returns an `*AcceptedError` that matches `ErrCollectionNotReady`; callers retry themselves or set `WithMaxRetries`
-    - Collection status filters are `*bool` (nil = no filter, true = include, false = exclude); build them with `boardgamegeek.Bool`. Tagged `int,omitempty`, go-querystring omits nil and sends 1/0
+    - Collection status filters are `*bool` (nil = no filter, true = include, false = exclude); build them with `new(true)` (Go 1.26). `boardgamegeek.Bool` is kept for compatibility and marked `//go:fix inline`, so `go fix` rewrites callers to `new(...)`. Tagged `int,omitempty`, go-querystring omits nil and sends 1/0
 4. Tests
     - Offline unit tests live in the root package and run with `go test ./...` (no token needed):
         - endpoints_test.go parses real BGG responses saved in `testdata/<endpoint>.xml` (each test notes the request it was captured with). Re-capture a fixture when a response struct changes

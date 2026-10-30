@@ -58,7 +58,7 @@ func ExampleClient_GetCollection() {
 
 	resp, err := client.GetCollection(context.Background(), &boardgamegeek.CollectionOptions{
 		Username: "Aldie",
-		Own:      boardgamegeek.Bool(true),
+		Own:      new(true),
 	})
 	if errors.Is(err, boardgamegeek.ErrNotFound) {
 		log.Fatal("no such user")

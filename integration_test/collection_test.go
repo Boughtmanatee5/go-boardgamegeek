@@ -101,7 +101,7 @@ func TestGetCollectionOwnFilterIncludes(t *testing.T) {
 	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
 		IDs:      []int64{seventhContinentID},
-		Own:      boardgamegeek.Bool(true),
+		Own:      new(true),
 	})
 	require.NoError(t, err)
 	assert.Len(t, response.Items, 1)
@@ -111,7 +111,7 @@ func TestGetCollectionOwnFilterExcludes(t *testing.T) {
 	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
 		IDs:      []int64{seventhContinentID},
-		Own:      boardgamegeek.Bool(false),
+		Own:      new(false),
 	})
 	require.NoError(t, err)
 	assert.Empty(t, response.Items)
@@ -120,7 +120,7 @@ func TestGetCollectionOwnFilterExcludes(t *testing.T) {
 func TestGetCollectionBriefWishlist(t *testing.T) {
 	response, err := getCollection(t, &boardgamegeek.CollectionOptions{
 		Username: aldieUsername,
-		Wishlist: boardgamegeek.Bool(true),
+		Wishlist: new(true),
 		Brief:    true,
 	})
 	require.NoError(t, err)

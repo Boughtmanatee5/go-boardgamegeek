@@ -85,8 +85,8 @@ func TestRequestQueryEncoding(t *testing.T) {
 			name: "collection status filters encode nil, true and false",
 			request: &CollectionOptions{
 				Username:  "Aldie",
-				Own:       Bool(true),
-				Wishlist:  Bool(false),
+				Own:       new(true),
+				Wishlist:  new(false),
 				MinRating: 7.5,
 				IDs:       []int64{1, 2},
 			},
