@@ -11,7 +11,7 @@ This is a go client to interface with boardgamegeek.com's api xmlapi2.
 The goal is to build clean go structs and interfaces to simplify making API requests to boardgamegeek.
 
 ## Architecture
-0. The module targets Go 1.26 (go.mod `go 1.26.6`) so older toolchains can use it; prefer stdlib features up to 1.26 (`errors.AsType`, `new(expr)`). The module is `github.com/Boughtmanatee5/go-boardgamegeek` and the package is `boardgamegeek`, so callers import it without an alias.
+0. The module targets Go 1.26 (go.mod `go 1.26`) so older toolchains can use it; prefer stdlib features up to 1.26 (`errors.AsType`, `new(expr)`). The module is `github.com/Boughtmanatee5/go-boardgamegeek` and the package is `boardgamegeek`, so callers import it without an alias.
    Naming follows Go conventions:
     - request params are `XxxOptions` and responses `XxxResponse`; methods return `(*XxxResponse, error)`
     - initialisms are upper case (`ID`, `CollID`)

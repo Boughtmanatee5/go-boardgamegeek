@@ -1,6 +1,6 @@
 module github.com/Boughtmanatee5/go-boardgamegeek
 
-go 1.26.6
+go 1.26
 
 require (
 	github.com/google/go-querystring v1.1.0
